@@ -24,5 +24,5 @@ export class FilterQuery {
 
   @IsOptional()
   @IsString()
-  order?: string;
+  order?: string = 'created_at';
 }
