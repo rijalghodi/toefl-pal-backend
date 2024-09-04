@@ -5,7 +5,9 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, genSalt, hash } from 'bcrypt';
-import { User } from 'src/user/user.entity';
+import { User } from 'src/user/entity/user.entity';
+
+import { Role } from '@/common/guard/role.enum';
 
 import { UserService } from '../user/user.service';
 import { RegisterDto } from './dto/register.dto';
@@ -29,8 +31,8 @@ export class AuthService {
     return user;
   }
 
-  async generateTokens(user: { id: string; role: string }) {
-    const payload = { sub: user.id, role: user.role };
+  async generateTokens(user: { id: string; roles: Role[] }) {
+    const payload = { sub: user.id, roles: user.roles };
 
     const access_token = this.jwtService.sign(payload);
 
@@ -61,7 +63,6 @@ export class AuthService {
 
     const newUser = await this.userService.createUser({
       ...payload,
-      role: 'user',
       password: hashedPassword,
     });
 

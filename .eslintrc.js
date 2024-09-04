@@ -20,7 +20,12 @@ module.exports = {
     node: true,
     jest: true,
   },
-  ignorePatterns: ['.eslintrc.js', '**migrations/**', 'node_modules/**'],
+  ignorePatterns: [
+    '.eslintrc.js',
+    '**migrations/**',
+    'node_modules/**',
+    'src/database/migration/**/*',
+  ],
   rules: {
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',

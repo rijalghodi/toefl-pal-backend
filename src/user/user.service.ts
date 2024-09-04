@@ -2,11 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 
-import { FilterQuery } from '@/common/dto/filter-query.dto';
+import { FilterQueryDto } from '@/common/dto/filter-query.dto';
 import { Pagination } from '@/common/dto/response.dto';
 
 import { CreateUserDto } from './dto/create-user.dto';
-import { User } from './user.entity';
+import { User } from './entity/user.entity';
 
 @Injectable()
 export class UserService {
@@ -18,15 +18,12 @@ export class UserService {
   }
 
   async filter(
-    filter: FilterQuery,
+    filter: FilterQueryDto,
   ): Promise<{ data: User[]; pagination: Pagination }> {
     const [data, count] = await this.userRepo.findAndCount({
-      select: ['id', 'email', 'name', 'role', 'created_at'],
+      select: ['id', 'email', 'roles', 'created_at'],
       where: filter.search
         ? [
-            {
-              name: ILike(`%${filter.search}%`),
-            },
             {
               email: ILike(`%${filter.search}%`),
             },
@@ -51,7 +48,6 @@ export class UserService {
   async checkDuplicate(options: FindOptionsWhere<User>): Promise<boolean> {
     const user = await this.userRepo.findOne({
       where: options,
-      select: { password: false },
     });
     return !!user;
   }
@@ -59,7 +55,7 @@ export class UserService {
   async findOne(options: FindOptionsWhere<User>): Promise<User> {
     const user = await this.userRepo.findOne({
       where: options,
-      select: { password: false },
+      select: ['email', 'roles', 'created_at'],
     });
 
     if (!user) {

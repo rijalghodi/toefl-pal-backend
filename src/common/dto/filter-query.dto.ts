@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
-export class FilterQuery {
+export class FilterQueryDto {
   @IsOptional()
   @Transform(({ value }) => parseInt(value, 10))
   @IsInt()

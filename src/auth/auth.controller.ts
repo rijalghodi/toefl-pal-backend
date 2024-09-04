@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common';
 
-import { Public } from '@/common/decorator/public.decorator';
 import { ResponseDto } from '@/common/dto/response.dto';
+import { Public } from '@/common/guard/public.decorator';
 
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -18,7 +18,7 @@ export class AuthController {
     const user = await this.authService.validateUser(email, password);
     const token = await this.authService.generateTokens({
       id: user.id,
-      role: user.role,
+      roles: user.roles,
     });
     return new ResponseDto('login succeed', token);
   }

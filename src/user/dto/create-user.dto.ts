@@ -1,6 +1,15 @@
+import { IsEmail, IsEnum, IsNotEmpty } from 'class-validator';
+
+import { Role } from '@/common/guard/role.enum';
+
 export class CreateUserDto {
-  name: string;
+  @IsNotEmpty()
+  @IsEmail({}, { message: 'Please provide valid Email.' })
   email: string;
+
+  @IsNotEmpty()
   password: string;
-  role?: string;
+
+  @IsEnum(Role, { message: 'Please provide valid role.' })
+  role?: Role;
 }
