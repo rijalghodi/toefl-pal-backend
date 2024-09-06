@@ -7,11 +7,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 import { User } from '../../user/entity/user.entity';
+import { ToeflVersion } from './toefl-version.entity';
 
 @Entity('toefl')
 export class Toefl {
@@ -36,6 +38,9 @@ export class Toefl {
 
   @Column('text', { nullable: true })
   closing?: string;
+
+  @OneToMany(() => ToeflVersion, (toeflVersion) => toeflVersion.toefl)
+  toeflVersions: ToeflVersion[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

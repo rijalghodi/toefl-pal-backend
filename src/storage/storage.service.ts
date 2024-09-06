@@ -44,7 +44,7 @@ export class StorageService {
     });
 
     const fileRecord = this.fileRepo.create({
-      filename: file.originalname,
+      filename: file.fieldname,
       originalFilename: file.originalname,
       url: publicUrl,
       mimetype: file.mimetype,

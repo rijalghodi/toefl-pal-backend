@@ -10,7 +10,7 @@ import { RoleGuard } from './common/guard/role.guard';
 import { CaseSerializeInterceptor } from './common/interceptor/case-serializer.interceptor';
 import datasource from './database/datasource';
 import { FormModule } from './form/form.module';
-import { SectionModule } from './section/section.module';
+import { PartModule } from './part/part.module';
 import { StorageModule } from './storage/storage.module';
 import { ToeflModule } from './toefl/toefl.module';
 import { UserModule } from './user/user.module';
@@ -23,8 +23,8 @@ import { UserModule } from './user/user.module';
     UserModule,
     ToeflModule,
     FormModule,
-    SectionModule,
     StorageModule,
+    PartModule,
   ],
   providers: [
     AppService,

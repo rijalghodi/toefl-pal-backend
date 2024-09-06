@@ -2,6 +2,7 @@
 import {
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Param,
@@ -49,20 +50,6 @@ export class ToeflController {
     return new ResponseDto('succeess', toefl);
   }
 
-  @Get(':toeflId/version')
-  @Roles(Role.SuperAdmin)
-  async fidnAllVersion(@Param('toeflId') toeflId: string) {
-    const toefl = await this.toeflVersionService.findAllToeflVersion(toeflId);
-    return new ResponseDto('succeess', toefl);
-  }
-
-  @Post(':toeflId/version')
-  @Roles(Role.SuperAdmin)
-  async createVersion(@Param('toeflId') toeflId: string) {
-    const toefl = await this.toeflVersionService.createToeflVersion(toeflId);
-    return new ResponseDto('succeess', toefl);
-  }
-
   @Get(':toeflId')
   async findOne(@Param('toeflId') toeflId: string, @Req() req: Request) {
     const user = (req as any).user;
@@ -95,5 +82,53 @@ export class ToeflController {
   ) {
     const toefl = await this.toeflService.publishToefl(toeflId, publish);
     return new ResponseDto('success', toefl);
+  }
+
+  // ----- TOEFL VERSION ------
+
+  @Post(':toeflId/version')
+  @Roles(Role.SuperAdmin)
+  async createVersion(@Param('toeflId') toeflId: string) {
+    const toefl = await this.toeflVersionService.createToeflVersion(toeflId);
+    return new ResponseDto('succeess', toefl);
+  }
+
+  @Get(':toeflId/version')
+  @Roles(Role.SuperAdmin)
+  async fidnAllVersion(@Param('toeflId') toeflId: string) {
+    const toefl = await this.toeflVersionService.findAllToeflVersion(toeflId);
+    return new ResponseDto('succeess', toefl);
+  }
+
+  @Get(':toeflId/version/active')
+  @Roles(Role.SuperAdmin)
+  async findActiveVersion(@Param('toeflId') toeflId: string) {
+    const toefl =
+      await this.toeflVersionService.findActiveToeflVersion(toeflId);
+    return new ResponseDto('succeess', toefl);
+  }
+
+  @Get(':toeflId/version/latest')
+  @Roles(Role.SuperAdmin)
+  async findLatestVersion(@Param('toeflId') toeflId: string) {
+    const toefl =
+      await this.toeflVersionService.findLatestToeflVersion(toeflId);
+    return new ResponseDto('succeess', toefl);
+  }
+
+  @Post(':toeflId/version/latest/activate')
+  @Roles(Role.SuperAdmin)
+  async activateLatestVersion(@Param('toeflId') toeflId: string) {
+    const toefl =
+      await this.toeflVersionService.activateLastToeflVersion(toeflId);
+    return new ResponseDto('succeess', toefl);
+  }
+
+  @Delete(':toeflId/version/latest')
+  @Roles(Role.SuperAdmin)
+  async removeLatestVersion(@Param('toeflId') toeflId: string) {
+    const toefl =
+      await this.toeflVersionService.removeLastToeflVersion(toeflId);
+    return new ResponseDto('succeess', toefl);
   }
 }

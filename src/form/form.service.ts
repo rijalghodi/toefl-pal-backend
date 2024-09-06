@@ -7,36 +7,25 @@ import { StorageService } from '@/storage/storage.service';
 import { CreateFormDto } from './dto/create-form.dto';
 import { UpdateFormDto } from './dto/update-form.dto';
 import { Form } from './entity/form.entity';
-import { FormVersion } from './entity/form-version.entity';
+// import { FormVersion } from './entity/form-version.entity';
 
 @Injectable()
 export class FormService {
   constructor(
     @InjectRepository(Form)
     private readonly formRepo: Repository<Form>,
-    @InjectRepository(FormVersion)
-    private readonly formVersionRepo: Repository<FormVersion>,
     private readonly storageService: StorageService,
   ) {}
 
-  async findOneForm(
-    formId?: string,
-  ): Promise<Omit<Form, 'setId'> & { version: FormVersion[] }> {
+  async findOneForm(formId?: string): Promise<Form> {
     const form = await this.formRepo.findOne({ where: { id: formId } });
-    const version = await this.findAllFormVersion(formId);
-    return { ...form, version };
-  }
-
-  async findAllFormVersion(formId: string): Promise<FormVersion[]> {
-    return this.formVersionRepo.find({
-      where: { form: { id: formId } },
-      order: { createdAt: 'DESC' },
-    });
+    // const version = await this.findAllFormVersion(formId);
+    return form;
   }
 
   async createForm(data: CreateFormDto): Promise<Form> {
     const form = await this.formRepo.save(this.formRepo.create(data));
-    await this.formVersionRepo.save(this.formVersionRepo.create({ form }));
+    // await this.formVersionRepo.save(this.formVersionRepo.create({ form }));
     return form;
   }
 
@@ -66,21 +55,5 @@ export class FormService {
 
     Object.assign(form, data);
     return this.formRepo.save(form);
-  }
-
-  async createFormVersion(formId: string): Promise<FormVersion> {
-    const form = await this.formRepo.findOne({ where: { id: formId } });
-    const formVersion = this.formVersionRepo.create({ form });
-    return this.formVersionRepo.save(formVersion);
-  }
-
-  // form version rarely updated
-  // async updateFormVersion() {}
-
-  async findLatestFormVersion(formId: string): Promise<FormVersion> {
-    return this.formVersionRepo.findOne({
-      where: { id: formId },
-      order: { createdAt: 'DESC' },
-    });
   }
 }

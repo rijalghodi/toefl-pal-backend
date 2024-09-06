@@ -28,7 +28,9 @@ export class ToeflService {
     }
 
     return this.toeflRepo.find({
-      where: published ? { publishedAt: Not(IsNull()) } : { publishedAt: null },
+      where: published
+        ? { publishedAt: Not(IsNull()), deletedAt: null }
+        : { publishedAt: null, deletedAt: null },
     });
   }
 
@@ -45,6 +47,12 @@ export class ToeflService {
     const toeflInp: DeepPartial<Toefl> = { ...data, createdBy: { id: userId } };
     const toefl = await this.toeflRepo.save(this.toeflRepo.create(toeflInp));
     await this.toeflVersionService.createDefaultToeflVersion(toefl);
+    const versions = await this.toeflVersionService.findAllToeflVersion(
+      toefl.id,
+    );
+    if (versions.length <= 1) {
+      await this.toeflVersionService.activateLastToeflVersion(toefl.id);
+    }
     return toefl;
   }
 

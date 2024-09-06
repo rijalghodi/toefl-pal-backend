@@ -1,13 +1,18 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
 
-import { SectionService } from '@/section/section.service';
+import { FormService } from '@/form/form.service';
 
 import { Toefl } from './entity/toefl.entity';
 import { ToeflVersion } from './entity/toefl-version.entity';
 import { ToeflService } from './toefl.service';
-// import { SectionService } from './section.service';
 
 @Injectable()
 export class ToeflVersionService {
@@ -16,29 +21,27 @@ export class ToeflVersionService {
     private readonly toeflVersionRepo: Repository<ToeflVersion>,
     @Inject(forwardRef(() => ToeflService))
     private readonly toeflService: ToeflService,
-    private readonly sectionService: SectionService,
+    private readonly formService: FormService,
   ) {}
 
   async createDefaultToeflVersion(toefl: Toefl): Promise<ToeflVersion> {
-    const [listeningSection, listeningSectionVersion] =
-      await this.sectionService.createSection('Listening Section', 35 * 60);
-
-    const [readingSection, readingSectionVersion] =
-      await this.sectionService.createSection('Reading Section', 50 * 60);
-
-    const [grammarSection, grammarSectionVersion] =
-      await this.sectionService.createSection(
-        'Structure & Written Expression Section',
-        25 * 60,
-      );
+    const listeningSection = await this.formService.createForm({
+      name: 'Listening Section',
+      duration: 35 * 60,
+    });
+    const readingSection = await this.formService.createForm({
+      name: 'Reading Section',
+      duration: 50 * 60,
+    });
+    const grammarSection = await this.formService.createForm({
+      name: 'Structure & Written Section',
+      duration: 25 * 60,
+    });
 
     const toeflVersionInp: DeepPartial<ToeflVersion> = {
       listeningSection,
-      listeningSectionVersion,
       readingSection,
-      readingSectionVersion,
       grammarSection,
-      grammarSectionVersion,
       toefl,
     };
 
@@ -49,53 +52,76 @@ export class ToeflVersionService {
 
   async findAllToeflVersion(toeflId: string): Promise<ToeflVersion[]> {
     return this.toeflVersionRepo.find({
-      where: { toefl: { id: toeflId } },
+      where: { toefl: { id: toeflId }, deletedAt: null },
       order: { createdAt: 'DESC' },
     });
   }
 
   async createToeflVersion(toeflId: string): Promise<ToeflVersion> {
-    const toeflLatestVersion = await this.findLatestToeflVersion(toeflId);
+    const toeflActiveVersion = await this.findActiveToeflVersion(toeflId);
     const toefl = await this.toeflService.findOneToefl(toeflId);
 
-    const grammarSectionVersion =
-      await this.sectionService.createSectionVersion(
-        toeflLatestVersion.grammarSection.id,
+    if (!toeflActiveVersion) {
+      throw new NotFoundException(
+        'no active toefl version. try to activate latest version',
       );
-    const listeningSectionVersion =
-      await this.sectionService.createSectionVersion(
-        toeflLatestVersion.listeningSection.id,
-      );
-    const readingSectionVersion =
-      await this.sectionService.createSectionVersion(
-        toeflLatestVersion.readingSection.id,
-      );
+    }
+
+    const grammarSection = await this.formService.createForm(
+      toeflActiveVersion.grammarSection,
+    );
+
+    const listeningSection = await this.formService.createForm(
+      toeflActiveVersion.listeningSection,
+    );
+    const readingSection = await this.formService.createForm(
+      toeflActiveVersion.readingSection,
+    );
 
     const newVersion: DeepPartial<ToeflVersion> = {
-      grammarSection: toeflLatestVersion.grammarSection,
-      grammarSectionVersion,
-      listeningSection: toeflLatestVersion.listeningSection,
-      listeningSectionVersion,
-      readingSection: toeflLatestVersion.readingSection,
-      readingSectionVersion,
+      readingSection,
+      listeningSection,
+      grammarSection,
       toefl,
     };
 
     return this.toeflVersionRepo.save(this.toeflVersionRepo.create(newVersion));
   }
 
+  async findActiveToeflVersion(toeflId: string): Promise<ToeflVersion> {
+    return this.toeflVersionRepo.findOne({
+      where: { toefl: { id: toeflId }, active: true },
+      order: { createdAt: 'DESC' },
+      relations: ['readingSection', 'listeningSection', 'grammarSection'],
+    });
+  }
+
   async findLatestToeflVersion(toeflId: string): Promise<ToeflVersion> {
     return this.toeflVersionRepo.findOne({
       where: { toefl: { id: toeflId } },
       order: { createdAt: 'DESC' },
-      relations: [
-        'readingSection',
-        'readingSectionVersion',
-        'listeningSection',
-        'listeningSectionVersion',
-        'grammarSection',
-        'grammarSectionVersion',
-      ],
+      relations: ['readingSection', 'listeningSection', 'grammarSection'],
     });
+  }
+
+  async activateLastToeflVersion(toeflId: string): Promise<ToeflVersion> {
+    const versions = await this.findAllToeflVersion(toeflId);
+    this.toeflVersionRepo.save(versions.map((v) => ({ ...v, active: false })));
+    const latest = versions[0];
+    return this.toeflVersionRepo.save({ ...latest, active: true });
+  }
+
+  async removeLastToeflVersion(toeflId: string): Promise<ToeflVersion> {
+    const versions = await this.findAllToeflVersion(toeflId);
+    if (!versions || versions.length <= 1) {
+      throw new BadRequestException('Cannot remove version with only 1');
+    }
+    const latest = versions[0];
+    await this.toeflVersionRepo.softRemove(latest);
+    if (latest.active) {
+      const nextLatest = await this.findLatestToeflVersion(toeflId);
+      await this.toeflVersionRepo.save({ ...nextLatest, active: true });
+    }
+    return null;
   }
 }
