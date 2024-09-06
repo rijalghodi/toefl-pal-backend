@@ -15,7 +15,7 @@ import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { ResponseDto } from '@/common/dto/response.dto';
 
 import { CreatePartDto } from './dto/create-part.dto';
-import { UpdatePartDto } from './dto/update-part-dto';
+import { UpdatePartDto } from './dto/update-part.dto';
 import { PartService } from './part.service';
 
 @UseInterceptors(

@@ -11,6 +11,8 @@ import { CaseSerializeInterceptor } from './common/interceptor/case-serializer.i
 import datasource from './database/datasource';
 import { FormModule } from './form/form.module';
 import { PartModule } from './part/part.module';
+import { QuestionModule } from './question/question.module';
+import { ReferenceModule } from './reference/reference.module';
 import { StorageModule } from './storage/storage.module';
 import { ToeflModule } from './toefl/toefl.module';
 import { UserModule } from './user/user.module';
@@ -25,6 +27,8 @@ import { UserModule } from './user/user.module';
     FormModule,
     StorageModule,
     PartModule,
+    QuestionModule,
+    ReferenceModule,
   ],
   providers: [
     AppService,

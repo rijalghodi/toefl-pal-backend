@@ -5,56 +5,54 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 import { Form } from '../../form/entity/form.entity';
-import { Question } from '../../question/entity/question.entity';
+import { Part } from '../../part/entity/part.entity';
+import { Reference } from '../../reference/entity/reference.entity';
 import { FileEntity } from '../../storage/entity/file.entity';
 
-@Entity('part')
-export class Part {
+@Entity('question')
+export class Question {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Form, (formVersion) => formVersion.id, {
-    nullable: false,
-  })
-  @JoinColumn([{ name: 'form_id' }])
-  form: Form;
-
-  @OneToMany(() => Question, (v) => v.part, {
-    nullable: false,
-  })
-  questions: Question[];
+  @Column({ type: 'text', nullable: true })
+  text?: string;
 
   @Column()
   order: number;
 
-  @Column({ type: 'text', nullable: true })
-  name?: string;
+  @ManyToOne(() => Form, {
+    nullable: false,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn([{ name: 'form_id' }])
+  form: Form;
 
-  @Column({ type: 'text', nullable: true })
-  instruction?: string;
+  @ManyToOne(() => Part, (v) => v.questions, {
+    nullable: true,
+  })
+  @JoinColumn([{ name: 'part_id' }])
+  part?: Part;
+
+  @ManyToOne(() => Reference, {
+    nullable: true,
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn([{ name: 'refernce_id' }])
+  reference?: Reference;
 
   @ManyToOne(() => FileEntity, (file) => file.id, {
     nullable: true,
     onDelete: 'SET NULL',
   })
-  @JoinColumn([{ name: 'instruction_audio_id', referencedColumnName: 'id' }])
-  instructionAudio: FileEntity;
-
-  @ManyToOne(() => FileEntity, (file) => file.id, {
-    nullable: true,
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn([{ name: 'closing_audio_id', referencedColumnName: 'id' }])
-  closingAudio: FileEntity;
-
-  @Column({ type: 'text', nullable: true })
-  closing?: string;
+  @JoinColumn([{ name: 'audio_id', referencedColumnName: 'id' }])
+  audio: FileEntity;
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;

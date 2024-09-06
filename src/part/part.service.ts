@@ -8,7 +8,7 @@ import { StorageService } from '@/storage/storage.service';
 
 import { Part } from '../part/entity/part.entity';
 import { CreatePartDto } from './dto/create-part.dto';
-import { UpdatePartDto } from './dto/update-part-dto';
+import { UpdatePartDto } from './dto/update-part.dto';
 
 @Injectable()
 export class PartService {

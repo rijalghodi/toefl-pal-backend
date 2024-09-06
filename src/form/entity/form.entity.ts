@@ -34,7 +34,7 @@ export class Form {
     onDelete: 'SET NULL',
   })
   @JoinColumn([{ name: 'instruction_audio_id', referencedColumnName: 'id' }])
-  instructionAudio: FileEntity;
+  instructionAudio?: FileEntity;
 
   @Column('text', { nullable: true })
   closing?: string;
@@ -44,7 +44,7 @@ export class Form {
     onDelete: 'SET NULL',
   })
   @JoinColumn([{ name: 'closing_audio_id', referencedColumnName: 'id' }])
-  closingAudio: FileEntity;
+  closingAudio?: FileEntity;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
