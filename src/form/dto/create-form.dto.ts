@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsInt,
@@ -25,6 +26,7 @@ export class CreateFormDto {
   @IsOptional()
   closing?: string;
 
+  @Transform(({ value }) => parseInt(value, 10))
   @IsInt()
   @IsOptional()
   duration?: number;
@@ -35,5 +37,6 @@ export class CreateFormDto {
 
   @IsBoolean()
   @IsOptional()
-  allowRewind?: boolean;
+  @Transform(({ value }) => JSON.parse(value))
+  allowReview?: boolean;
 }

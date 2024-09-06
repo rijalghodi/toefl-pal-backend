@@ -18,7 +18,7 @@ export class SectionService {
     const section = await this.formService.createForm({
       name,
       duration,
-      allowRewind: false,
+      allowReview: false,
       autoPlay: true,
       description: '',
     });

@@ -1,5 +1,16 @@
 // auth.controller.ts
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
 import { ResponseDto } from '@/common/dto/response.dto';
 import { Role } from '@/common/guard/role.enum';
@@ -29,15 +40,38 @@ export class SectionController {
     const section = await this.formService.findOneForm(sectionId);
     return new ResponseDto('success get one section', section);
   }
-
   @Patch(':sectionId')
-  @Roles(Role.SuperAdmin)
-  async update(
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.startsWith('audio/')) {
+          return callback(
+            new BadRequestException('Only audio files are allowed'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  async updateSection(
     @Param('sectionId') sectionId: string,
-    @Body() body: UpdateFormDto,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() updateSectionDto: UpdateFormDto,
   ) {
-    const section = await this.formService.updateForm(sectionId, body);
-    return new ResponseDto('success update section', section);
+    const instructionAudio = files.find(
+      (file) => file.fieldname === 'instruction_audio',
+    );
+    const closingAudio = files.find(
+      (file) => file.fieldname === 'closing_audio',
+    );
+
+    return this.formService.updateForm(
+      sectionId,
+      updateSectionDto,
+      instructionAudio,
+      closingAudio,
+    );
   }
 
   @Post(':sectionId/version')

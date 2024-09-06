@@ -4,9 +4,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { FileEntity } from '../../storage/entity/file.entity';
 
 @Entity('form')
 export class Form {
@@ -25,8 +29,22 @@ export class Form {
   @Column('text', { nullable: true })
   instruction?: string;
 
+  @ManyToOne(() => FileEntity, (file) => file.id, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn([{ name: 'instruction_audio_id', referencedColumnName: 'id' }])
+  instructionAudio: FileEntity;
+
   @Column('text', { nullable: true })
   closing?: string;
+
+  @ManyToOne(() => FileEntity, (file) => file.id, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn([{ name: 'closing_audio_id', referencedColumnName: 'id' }])
+  closingAudio: FileEntity;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

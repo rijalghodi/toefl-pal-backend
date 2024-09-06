@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { FormModule } from '@/form/form.module';
@@ -13,7 +13,7 @@ import { ToeflVersionService } from './toefl-version.service';
 @Module({
   imports: [
     FormModule,
-    SectionModule,
+    forwardRef(() => SectionModule),
     TypeOrmModule.forFeature([Toefl, ToeflVersion]),
   ],
   providers: [ToeflService, ToeflVersionService],
