@@ -1,9 +1,9 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { IsBoolean, IsOptional, IsString } from 'class-validator';
 
-import { CreateToeflItpDto } from './create-toefl-itp.dto';
+import { CreateToeflDto } from './create-toefl.dto';
 
-export class UpdateToeflItpDto extends PartialType(CreateToeflItpDto) {
+export class UpdateToeflDto extends PartialType(CreateToeflDto) {
   @IsBoolean()
   @IsOptional()
   allowReview?: boolean;

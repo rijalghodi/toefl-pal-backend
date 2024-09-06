@@ -9,7 +9,9 @@ import { AuthGuard } from './common/guard/auth.guard';
 import { RoleGuard } from './common/guard/role.guard';
 import { CaseSerializeInterceptor } from './common/interceptor/case-serializer.interceptor';
 import datasource from './database/datasource';
-import { ToeflItpModule } from './toefl-itp/toefl-itp.module';
+import { FormModule } from './form/form.module';
+import { SectionModule } from './section/section.module';
+import { ToeflModule } from './toefl/toefl.module';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -18,7 +20,9 @@ import { UserModule } from './user/user.module';
     TypeOrmModule.forRoot({ ...datasource.options }),
     AuthModule,
     UserModule,
-    ToeflItpModule,
+    ToeflModule,
+    FormModule,
+    SectionModule,
   ],
   providers: [
     AppService,

@@ -5,10 +5,10 @@ import { Seeder } from 'typeorm-extension';
 import { User } from '@/user/entity/user.entity';
 
 import { SeederEntity } from '../../database/entity/seeder.entity';
-import { ToeflItp } from '../entity/toefl-itp.entity';
+import { Toefl } from '../entity/toefl.entity';
 
-export default class ToeflItpSeeder1725482866314 implements Seeder {
-  private name = 'ToeflItpSeeder1725482866314';
+export default class ToeflSeeder1725482866314 implements Seeder {
+  private name = 'ToeflSeeder1725482866314';
 
   public async run(datasource: DataSource): Promise<void> {
     if (await this.isSeederAlreadyRun(datasource)) return;
@@ -17,16 +17,16 @@ export default class ToeflItpSeeder1725482866314 implements Seeder {
 
     if (!users || users.length === 0) return;
 
-    const toeflItpData = this.generateToeflItpData(users);
+    const toeflData = this.generateToeflData(users);
 
-    await this.saveToeflItpData(datasource, toeflItpData);
+    await this.saveToeflData(datasource, toeflData);
     await this.recordSeederCompletion(datasource);
   }
 
   private async isSeederAlreadyRun(datasource: DataSource): Promise<boolean> {
     const seederRepository = datasource.getRepository(SeederEntity);
     return !!(await seederRepository.findOneBy({
-      name: ToeflItpSeeder1725482866314.name,
+      name: ToeflSeeder1725482866314.name,
     }));
   }
 
@@ -37,31 +37,30 @@ export default class ToeflItpSeeder1725482866314 implements Seeder {
     return datasource.getRepository(User).find({ take: limit ?? 10 });
   }
 
-  private generateToeflItpData(
+  private generateToeflData(
     users: User[],
     length?: number,
-  ): DeepPartial<ToeflItp>[] {
+  ): DeepPartial<Toefl>[] {
     return Array.from({ length: length ?? 10 }, () => ({
       name: `Test TOEFL ${faker.number.int({ min: 1, max: 100 })}`,
-      version: 1,
-      description: faker.lorem.sentence(),
+      description: faker.lorem.sentence(10),
       premium: faker.datatype.boolean(),
       createdBy: faker.helpers.arrayElement(users),
-      instruction: faker.lorem.sentence({ min: 50, max: 250 }),
-      closing: faker.lorem.sentence({ min: 50, max: 250 }),
+      instruction: faker.lorem.sentence({ min: 50, max: 100 }),
+      closing: faker.lorem.sentence({ min: 50, max: 100 }),
     }));
   }
 
-  private async saveToeflItpData(
+  private async saveToeflData(
     datasource: DataSource,
-    data: DeepPartial<ToeflItp>[],
+    data: DeepPartial<Toefl>[],
   ): Promise<void> {
-    const toeflItpRepository = datasource.getRepository(ToeflItp);
-    await toeflItpRepository.save(data);
+    const toeflRepository = datasource.getRepository(Toefl);
+    await toeflRepository.save(data);
   }
 
   private async recordSeederCompletion(datasource: DataSource): Promise<void> {
     const seederRepository = datasource.getRepository(SeederEntity);
-    await seederRepository.save({ name: ToeflItpSeeder1725482866314.name });
+    await seederRepository.save({ name: ToeflSeeder1725482866314.name });
   }
 }

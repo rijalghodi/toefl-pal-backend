@@ -3,24 +3,33 @@ import {
   BeforeInsert,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('form')
-export class Form {
+import { User } from '../../user/entity/user.entity';
+
+@Entity('toefl')
+export class Toefl {
   @PrimaryColumn()
   id: string;
 
   @Column({ type: 'varchar', length: 100 })
   name: string;
 
-  @Column('int', { default: 25 * 60 })
-  duration: number; // in seconds
+  @Column('text', { nullable: true })
+  description?: string;
 
-  @Column('boolean', { name: 'allow_review', default: true })
-  allowReview?: boolean;
+  @Column({ default: false })
+  premium: boolean;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'created_by' })
+  createdBy: User;
 
   @Column('text', { nullable: true })
   instruction?: string;
@@ -30,6 +39,12 @@ export class Form {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
+
+  @Column({ type: 'timestamp', name: 'published_at', nullable: true })
+  publishedAt: Date | null;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt: Date | null;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;

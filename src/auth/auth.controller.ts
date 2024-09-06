@@ -15,18 +15,23 @@ export class AuthController {
   @Post('login')
   async login(@Body() body: LoginDto) {
     const { email, password } = body;
-    const user = await this.authService.validateUser(email, password);
+    // eslint-disable-next-line
+    const { password: w, ...user } = await this.authService.validateUser(
+      email,
+      password,
+    );
     const token = await this.authService.generateTokens({
       id: user.id,
       roles: user.roles,
     });
-    return new ResponseDto('login succeed', token);
+    return new ResponseDto('login succeed', { ...user, accessToken: token });
   }
 
   @Public()
   @Post('register')
   async register(@Body() body: RegisterDto) {
     const user = await this.authService.register(body);
-    return new ResponseDto('register succeed', user);
+    const { password, ...userWithNoPass } = user; // eslint-disable-line
+    return new ResponseDto('register succeed', userWithNoPass);
   }
 }
