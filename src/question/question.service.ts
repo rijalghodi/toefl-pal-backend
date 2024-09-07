@@ -21,7 +21,7 @@ export class QuestionService {
 
   async create(
     formId: string,
-    createQuestionDto: CreateQuestionDto,
+    { referenceId, ...data }: CreateQuestionDto,
     audioFile?: Express.Multer.File,
   ): Promise<Question> {
     const form = await this.formService.findOneForm(formId);
@@ -30,10 +30,10 @@ export class QuestionService {
     const audio = await this.uploadAudioFile(audioFile);
 
     const question = this.questionRepo.create({
-      ...createQuestionDto,
+      ...data,
       audio,
       form,
-      reference: { id: createQuestionDto.referenceId },
+      reference: { id: referenceId },
     });
     return this.questionRepo.save(question);
   }
@@ -57,7 +57,7 @@ export class QuestionService {
 
   async update(
     questionId: string,
-    updateQuestionDto: UpdateQuestionDto,
+    { referenceId, ...data }: UpdateQuestionDto,
     audioFile?: Express.Multer.File,
   ): Promise<Question> {
     const question = await this.findOne(questionId);
@@ -67,8 +67,8 @@ export class QuestionService {
       : question.audio;
 
     Object.assign(question, {
-      ...updateQuestionDto,
-      reference: { id: updateQuestionDto.referenceId },
+      ...data,
+      reference: { id: referenceId },
     });
     return this.questionRepo.save(question);
   }

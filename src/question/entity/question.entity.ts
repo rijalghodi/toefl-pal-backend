@@ -5,9 +5,12 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { Option } from '@/option/entity/option.entity';
 
 import { Form } from '../../form/entity/form.entity';
 import { Part } from '../../part/entity/part.entity';
@@ -53,6 +56,9 @@ export class Question {
   })
   @JoinColumn([{ name: 'audio_id', referencedColumnName: 'id' }])
   audio: FileEntity;
+
+  @OneToMany(() => Option, (v) => v.question)
+  options: Option[];
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;

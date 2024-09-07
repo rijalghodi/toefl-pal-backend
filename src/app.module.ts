@@ -10,6 +10,7 @@ import { RoleGuard } from './common/guard/role.guard';
 import { CaseSerializeInterceptor } from './common/interceptor/case-serializer.interceptor';
 import datasource from './database/datasource';
 import { FormModule } from './form/form.module';
+import { OptionModule } from './option/option.module';
 import { PartModule } from './part/part.module';
 import { QuestionModule } from './question/question.module';
 import { ReferenceModule } from './reference/reference.module';
@@ -29,6 +30,7 @@ import { UserModule } from './user/user.module';
     PartModule,
     QuestionModule,
     ReferenceModule,
+    OptionModule,
   ],
   providers: [
     AppService,
