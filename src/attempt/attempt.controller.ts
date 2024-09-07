@@ -44,17 +44,13 @@ export class AttemptController {
   }
 
   @Get(':attemptId')
-  async findOne(
-    @Param('attemptId') attemptId: string,
-    @Request() req: Request,
-  ) {
+  async findOne(@Param('attemptId') attemptId: string, @Req() req: Request) {
     const userId = (req as any).user.id;
     const attempt = await this.attemptService.findOne(attemptId);
 
     if (attempt.user.id !== userId) {
       throw new ForbiddenException();
     }
-
     return new ResponseDto('success', attempt);
   }
 }

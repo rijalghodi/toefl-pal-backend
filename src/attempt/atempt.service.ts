@@ -39,12 +39,13 @@ export class AttemptService {
     });
   }
 
-  async findOne(id: string): Promise<Attempt> {
+  async findOne(attemptId: string): Promise<Attempt> {
     const attempt = await this.attemptRepo.findOne({
-      where: { id },
+      where: { id: attemptId },
+      relations: ['user'],
     });
     if (!attempt)
-      throw new NotFoundException(`Attempt with id ${id} not found`);
+      throw new NotFoundException(`Attempt with id ${attemptId} not found`);
     return attempt;
   }
 }
