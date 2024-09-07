@@ -13,7 +13,7 @@ import { ResponseDto } from '@/common/dto/response.dto';
 import { Role } from '@/common/guard/role.enum';
 import { Roles } from '@/common/guard/roles.decorator';
 
-import { AttemptService } from './atempt.service';
+import { AttemptService } from './attempt.service';
 import { CreateAttemptDto } from './dto/create-attempt.dto';
 
 @Controller('form/:formId/attempt')
