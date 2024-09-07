@@ -1,6 +1,6 @@
 // dto/create-part.dto.ts
 import { Transform } from 'class-transformer';
-import { IsNumber, IsOptional } from 'class-validator';
+import { IsNumber, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateQuestionDto {
   @Transform(({ value }) => parseInt(value, 10))
@@ -11,5 +11,6 @@ export class CreateQuestionDto {
   text?: string;
 
   @IsOptional()
+  @IsUUID()
   referenceId?: string;
 }

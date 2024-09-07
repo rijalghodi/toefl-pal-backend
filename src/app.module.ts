@@ -4,6 +4,7 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppService } from './app.service';
+import { AttemptModule } from './attempt/attempt.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './common/guard/auth.guard';
 import { RoleGuard } from './common/guard/role.guard';
@@ -32,6 +33,7 @@ import { UserModule } from './user/user.module';
     ReferenceModule,
     OptionModule,
     KeyModule,
+    AttemptModule,
   ],
   providers: [
     AppService,

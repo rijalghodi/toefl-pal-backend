@@ -1,6 +1,6 @@
 // dto/update-part.dto.ts
 import { Transform } from 'class-transformer';
-import { IsNumber, IsOptional } from 'class-validator';
+import { IsNumber, IsOptional, IsUUID } from 'class-validator';
 
 export class UpdateQuestionDto {
   @IsOptional()
@@ -12,5 +12,6 @@ export class UpdateQuestionDto {
   text?: string;
 
   @IsOptional()
+  @IsUUID()
   referenceId?: string;
 }
