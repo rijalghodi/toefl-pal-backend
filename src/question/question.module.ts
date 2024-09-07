@@ -12,5 +12,6 @@ import { StorageModule } from '@/storage/storage.module';
   imports: [TypeOrmModule.forFeature([Question]), StorageModule, FormModule],
   providers: [QuestionService],
   controllers: [QuestionController],
+  exports: [QuestionService],
 })
 export class QuestionModule {}

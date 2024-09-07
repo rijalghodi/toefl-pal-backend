@@ -2,8 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { FormService } from '@/form/form.service';
-import { StorageService } from '@/storage/storage.service';
+import { QuestionService } from '@/question/question.service';
 
 import { CreateOptionDto } from './dto/create-option.dto';
 import { UpdateOptionDto } from './dto/update-option.dto';
@@ -14,14 +13,13 @@ export class OptionService {
   constructor(
     @InjectRepository(Option)
     private readonly optionRepo: Repository<Option>,
-    private readonly formService: FormService,
-    private readonly storageService: StorageService,
+    private readonly questionService: QuestionService,
   ) {}
 
   async create(questionId: string, data: CreateOptionDto): Promise<Option> {
-    const form = await this.formService.findOneForm(questionId);
+    const form = await this.questionService.findOne(questionId);
     if (!form)
-      throw new NotFoundException(`Form with id ${questionId} not found`);
+      throw new NotFoundException(`Question with id ${questionId} not found`);
 
     const option = this.optionRepo.create({
       ...data,
@@ -35,14 +33,12 @@ export class OptionService {
   async findAll(questionId?: string): Promise<Option[]> {
     return this.optionRepo.find({
       where: { deletedAt: null, question: { id: questionId } },
-      relations: ['audio'],
     });
   }
 
   async findOne(id: string): Promise<Option> {
     const option = await this.optionRepo.findOne({
       where: { id },
-      relations: ['audio'],
     });
     if (!option) throw new NotFoundException(`Option with id ${id} not found`);
     return option;

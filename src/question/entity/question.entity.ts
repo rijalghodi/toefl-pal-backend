@@ -10,9 +10,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Option } from '@/option/entity/option.entity';
-
 import { Form } from '../../form/entity/form.entity';
+import { Option } from '../../option/entity/option.entity';
 import { Part } from '../../part/entity/part.entity';
 import { Reference } from '../../reference/entity/reference.entity';
 import { FileEntity } from '../../storage/entity/file.entity';
