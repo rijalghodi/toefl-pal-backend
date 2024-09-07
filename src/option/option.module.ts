@@ -12,5 +12,6 @@ import { OptionService } from './option.service';
   imports: [TypeOrmModule.forFeature([Option]), QuestionModule],
   providers: [OptionService],
   controllers: [OptionController],
+  exports: [OptionService],
 })
 export class OptionModule {}

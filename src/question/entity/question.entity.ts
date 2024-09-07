@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 
 import { Form } from '../../form/entity/form.entity';
+import { Key } from '../../key/entity/key.entity';
 import { Option } from '../../option/entity/option.entity';
 import { Part } from '../../part/entity/part.entity';
 import { Reference } from '../../reference/entity/reference.entity';
@@ -57,7 +58,10 @@ export class Question {
   audio: FileEntity;
 
   @OneToMany(() => Option, (v) => v.question)
-  options: Option[];
+  options?: Option[];
+
+  @OneToMany(() => Key, (v) => v.question)
+  keys?: Key[];
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;

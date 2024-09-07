@@ -48,7 +48,17 @@ export class QuestionService {
   async findOne(id: string): Promise<Question> {
     const question = await this.questionRepo.findOne({
       where: { id },
-      relations: ['audio'],
+      relations: ['audio', 'options', 'reference'],
+    });
+    if (!question)
+      throw new NotFoundException(`Question with id ${id} not found`);
+    return question;
+  }
+
+  async findOneWithAnswerKey(id: string): Promise<Question> {
+    const question = await this.questionRepo.findOne({
+      where: { id },
+      relations: ['keys', 'options'],
     });
     if (!question)
       throw new NotFoundException(`Question with id ${id} not found`);

@@ -7,9 +7,9 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './common/guard/auth.guard';
 import { RoleGuard } from './common/guard/role.guard';
-import { CaseSerializeInterceptor } from './common/interceptor/case-serializer.interceptor';
 import datasource from './database/datasource';
 import { FormModule } from './form/form.module';
+import { KeyModule } from './key/key.module';
 import { OptionModule } from './option/option.module';
 import { PartModule } from './part/part.module';
 import { QuestionModule } from './question/question.module';
@@ -31,6 +31,7 @@ import { UserModule } from './user/user.module';
     QuestionModule,
     ReferenceModule,
     OptionModule,
+    KeyModule,
   ],
   providers: [
     AppService,
@@ -45,10 +46,6 @@ import { UserModule } from './user/user.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: CaseSerializeInterceptor,
     },
   ],
 })
