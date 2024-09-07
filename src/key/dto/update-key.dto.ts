@@ -3,9 +3,9 @@ import { IsOptional, IsUUID } from 'class-validator';
 
 export class UpdateKeyDto {
   @IsOptional()
-  @IsUUID()
-  optionId: string;
+  explanation?: string;
 
   @IsOptional()
-  explanation?: string;
+  @IsUUID()
+  optionId?: string;
 }

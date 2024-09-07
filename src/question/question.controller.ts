@@ -14,8 +14,8 @@ import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
 import { ResponseDto } from '@/common/dto/response.dto';
 
-import { CreateQuestionDto } from './dto/create-question.dto';
-import { UpdateQuestionDto } from './dto/update-question.dto';
+import { CreateQuestionFullDto } from './dto/create-question-full.dto';
+import { UpdateQuestionFullDto } from './dto/update-question-full.dto';
 import { QuestionService } from './question.service';
 
 @UseInterceptors(
@@ -38,16 +38,12 @@ export class QuestionController {
   @Post()
   async create(
     @Param('formId') formId: string,
-    @Body() createQuestionDto: CreateQuestionDto,
+    @Body() dto: CreateQuestionFullDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     const { audio } = this.extractAudioFiles(files);
-    const question = await this.questionService.create(
-      formId,
-      createQuestionDto,
-      audio,
-    );
-    return new ResponseDto('success', question);
+    const result = this.questionService.createQuestionFull(formId, dto, audio);
+    return new ResponseDto('success', result);
   }
 
   @Get()
@@ -65,13 +61,13 @@ export class QuestionController {
   @Patch(':questionId')
   async update(
     @Param('questionId') questionId: string,
-    @Body() updateQuestionDto: UpdateQuestionDto,
+    @Body() dto: UpdateQuestionFullDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     const { audio } = this.extractAudioFiles(files);
-    const question = await this.questionService.update(
+    const question = await this.questionService.updateFull(
       questionId,
-      updateQuestionDto,
+      dto,
       audio,
     );
     return new ResponseDto('success', question);

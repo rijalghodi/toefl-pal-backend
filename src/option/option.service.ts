@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 
 import { QuestionService } from '@/question/question.service';
 
@@ -17,17 +17,50 @@ export class OptionService {
   ) {}
 
   async create(questionId: string, data: CreateOptionDto): Promise<Option> {
-    const form = await this.questionService.findOne(questionId);
-    if (!form)
-      throw new NotFoundException(`Question with id ${questionId} not found`);
+    await this.questionService.findOne(questionId);
 
     const option = this.optionRepo.create({
       ...data,
-      question: {
-        id: questionId,
-      },
+      question: { id: questionId },
     });
+
     return this.optionRepo.save(option);
+  }
+
+  async createBulk(
+    questionId: string,
+    options: string[],
+  ): Promise<DeepPartial<Option>[]> {
+    const optionsToInsert: DeepPartial<Option>[] = options.map(
+      (text, index) => ({
+        text,
+        order: index + 1,
+        question: { id: questionId },
+      }),
+    );
+
+    const result = await this.optionRepo.insert(optionsToInsert);
+    return result.identifiers.map((identifier, index) => ({
+      ...optionsToInsert[index],
+      id: identifier.id,
+    }));
+  }
+
+  async updateBulk(
+    updates: { id: string; text?: string; order?: number }[],
+  ): Promise<Option[]> {
+    const updatedOptions: Option[] = [];
+
+    for (const update of updates) {
+      const updatedOption = await this.update(update.id, {
+        text: update.text,
+        order: update.order,
+      });
+
+      updatedOptions.push(updatedOption);
+    }
+
+    return updatedOptions;
   }
 
   async findAll(questionId?: string): Promise<Option[]> {
@@ -40,7 +73,11 @@ export class OptionService {
     const option = await this.optionRepo.findOne({
       where: { id },
     });
-    if (!option) throw new NotFoundException(`Option with id ${id} not found`);
+
+    if (!option) {
+      throw new NotFoundException(`Option with id ${id} not found`);
+    }
+
     return option;
   }
 

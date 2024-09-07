@@ -5,6 +5,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -20,7 +21,7 @@ export class Key {
   @Column({ type: 'text', nullable: true })
   explanation?: string;
 
-  @ManyToOne(() => Question, (v) => v.id, {
+  @OneToOne(() => Question, (v) => v.id, {
     nullable: true,
     onDelete: 'SET NULL',
   })

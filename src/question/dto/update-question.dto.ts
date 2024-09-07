@@ -1,15 +1,20 @@
-// dto/update-part.dto.ts
+// dto/create-part.dto.ts
 import { Transform } from 'class-transformer';
-import { IsNumber, IsOptional, IsUUID } from 'class-validator';
+import { IsInt, IsOptional, IsUUID } from 'class-validator';
 
 export class UpdateQuestionDto {
+  // ---- Question ----
   @IsOptional()
   @Transform(({ value }) => parseInt(value, 10))
-  @IsNumber()
+  @IsInt()
   order?: number;
 
   @IsOptional()
   text?: string;
+
+  // audio is catched by other
+
+  // ---- Reference
 
   @IsOptional()
   @IsUUID()

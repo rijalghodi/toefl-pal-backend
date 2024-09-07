@@ -70,12 +70,10 @@ export class KeyService {
     return key;
   }
 
-  async update(
-    questionId: string,
-    keyId: string,
-    { optionId, ...data }: UpdateKeyDto,
-  ): Promise<Key> {
-    const key = await this.findOne(keyId);
+  async update(questionId: string, data: UpdateKeyDto): Promise<Key> {
+    const key = await this.keyRepo.findOne({
+      where: { question: { id: questionId } },
+    });
 
     if (!key)
       throw new NotFoundException(`Key with id ${questionId} not found`);
@@ -85,17 +83,19 @@ export class KeyService {
     if (!question)
       throw new NotFoundException(`Question with id ${questionId} not found`);
 
-    if (optionId) {
-      const option = await this.optioanService.findOne(optionId);
+    if (data.optionId) {
+      const option = await this.optioanService.findOne(data.optionId);
 
       if (!option)
-        throw new NotFoundException(`Option with id ${optionId} not found`);
+        throw new NotFoundException(
+          `Option with id ${data.optionId} not found`,
+        );
 
       if (!question.options.some((v: Option) => v.id === option.id))
         throw new NotFoundException(`No option in question match your option`);
       Object.assign(key, {
         option: {
-          id: optionId,
+          id: data.optionId,
         },
       });
     }

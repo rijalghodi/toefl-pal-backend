@@ -6,6 +6,7 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -60,8 +61,8 @@ export class Question {
   @OneToMany(() => Option, (v) => v.question)
   options?: Option[];
 
-  @OneToMany(() => Key, (v) => v.question)
-  keys?: Key[];
+  @OneToOne(() => Key, (v) => v.question)
+  key?: Key;
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;
