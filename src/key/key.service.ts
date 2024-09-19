@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -19,7 +21,9 @@ export class KeyService {
   constructor(
     @InjectRepository(Key)
     private readonly keyRepo: Repository<Key>,
+    @Inject(forwardRef(() => QuestionService))
     private readonly questionService: QuestionService,
+    @Inject(forwardRef(() => OptionService))
     private readonly optioanService: OptionService,
   ) {}
 
@@ -37,12 +41,6 @@ export class KeyService {
 
     if (!question.options?.some((v: Option) => v.id === data.optionId))
       throw new BadRequestException(`No option in question match your option`);
-
-    // For now, we limit one question, one answer key
-    if (!(question.keys && question.keys.length === 0))
-      throw new BadRequestException(
-        `Two answer key not allowed in one question`,
-      );
 
     const key = this.keyRepo.create({
       ...data,

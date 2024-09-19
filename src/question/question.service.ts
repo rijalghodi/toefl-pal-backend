@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -21,7 +26,9 @@ export class QuestionService {
     private readonly questionRepo: Repository<Question>,
     private readonly formService: FormService,
     private readonly storageService: StorageService,
+    @Inject(forwardRef(() => OptionService))
     private readonly optionService: OptionService,
+    @Inject(forwardRef(() => KeyService))
     private readonly keyService: KeyService,
   ) {}
 

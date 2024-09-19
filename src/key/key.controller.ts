@@ -49,7 +49,7 @@ export class KeyController {
     @Param('keyId') keyId: string,
     @Body() updateKeyDto: UpdateKeyDto,
   ) {
-    const key = await this.keyService.update(questionId, keyId, updateKeyDto);
+    const key = await this.keyService.update(questionId, updateKeyDto);
     return new ResponseDto('success', key);
   }
 

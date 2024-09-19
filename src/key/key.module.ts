@@ -1,5 +1,5 @@
 // part.module.ts
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { OptionModule } from '@/option/option.module';
@@ -10,8 +10,13 @@ import { KeyController } from './key.controller';
 import { KeyService } from './key.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Key]), QuestionModule, OptionModule],
+  imports: [
+    TypeOrmModule.forFeature([Key]),
+    forwardRef(() => QuestionModule),
+    forwardRef(() => OptionModule),
+  ],
   providers: [KeyService],
   controllers: [KeyController],
+  exports: [KeyService],
 })
 export class KeyModule {}
