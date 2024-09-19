@@ -79,4 +79,13 @@ export class ToeflService {
       published || published === undefined ? new Date() : null;
     return this.toeflRepo.save(toefl);
   }
+
+  async premiumToefl(id: string, premium: boolean): Promise<Toefl> {
+    const toefl = await this.findOneToefl(id);
+    if (!toefl) {
+      throw new NotFoundException(`Toefl with ID ${id} not found`);
+    }
+    toefl.premium = premium;
+    return this.toeflRepo.save(toefl);
+  }
 }

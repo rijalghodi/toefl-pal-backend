@@ -74,6 +74,8 @@ export class ToeflController {
     return new ResponseDto('success', toefl);
   }
 
+  // ---- Publish TOEFL -----
+
   @Post(':toeflId')
   @Roles(Role.SuperAdmin)
   async publishToefl(
@@ -81,6 +83,16 @@ export class ToeflController {
     @Body('publish') publish?: boolean,
   ) {
     const toefl = await this.toeflService.publishToefl(toeflId, publish);
+    return new ResponseDto('success', toefl);
+  }
+
+  @Post(':toeflId')
+  @Roles(Role.SuperAdmin)
+  async premiumToefl(
+    @Param('toeflId') toeflId: string,
+    @Body('premium') premium?: boolean,
+  ) {
+    const toefl = await this.toeflService.premiumToefl(toeflId, premium);
     return new ResponseDto('success', toefl);
   }
 
