@@ -33,7 +33,7 @@ export class Form {
     enum: SkillType,
     default: SkillType.READING,
   })
-  testType: SkillType;
+  skillType: SkillType;
 
   @Column('text', { nullable: true })
   instruction?: string;
