@@ -1,12 +1,15 @@
 import { Transform } from 'class-transformer';
 import {
   IsBoolean,
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
 } from 'class-validator';
+
+import { SkillType } from '../enum/skill-type.enum';
 
 export class CreateFormDto {
   @IsNotEmpty()
@@ -39,4 +42,8 @@ export class CreateFormDto {
   @IsOptional()
   @Transform(({ value }) => JSON.parse(value))
   allowReview?: boolean;
+
+  @IsEnum(SkillType)
+  @IsOptional()
+  skillType?: SkillType;
 }

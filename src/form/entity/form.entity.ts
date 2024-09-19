@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 
 import { FileEntity } from '../../storage/entity/file.entity';
+import { SkillType } from '../enum/skill-type.enum';
 
 @Entity('form')
 export class Form {
@@ -25,6 +26,14 @@ export class Form {
 
   @Column('boolean', { name: 'allow_review', default: true })
   allowReview?: boolean;
+
+  @Column({
+    type: 'enum',
+    name: 'skill_type',
+    enum: SkillType,
+    default: SkillType.READING,
+  })
+  testType: SkillType;
 
   @Column('text', { nullable: true })
   instruction?: string;

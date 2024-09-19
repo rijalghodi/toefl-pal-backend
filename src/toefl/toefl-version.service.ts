@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
 
+import { SkillType } from '@/form/enum/skill-type.enum';
 import { FormService } from '@/form/form.service';
 
 import { Toefl } from './entity/toefl.entity';
@@ -28,14 +29,17 @@ export class ToeflVersionService {
     const listeningSection = await this.formService.createForm({
       name: 'Listening Section',
       duration: 35 * 60,
+      skillType: SkillType.LISTENING,
     });
     const readingSection = await this.formService.createForm({
       name: 'Reading Section',
       duration: 50 * 60,
+      skillType: SkillType.READING,
     });
     const grammarSection = await this.formService.createForm({
       name: 'Structure & Written Section',
       duration: 25 * 60,
+      skillType: SkillType.GRAMMAR,
     });
 
     const toeflVersionInp: DeepPartial<ToeflVersion> = {
