@@ -21,5 +21,5 @@ The Best Online TOEFL Test Simulation
   - `yarn format`: Format code using Prettier.
   - `yarn lint`: Fix code formatting issues using ESLint.
   - `yarn migrate:create <path-to-migration-file>`: Create a new migration file at the specified path.
-  - `yarn migrate:generate <path-to-migration-file>`: Generate a migration file based on the current database schema.
+  - `yarn migrate:gen <path-to-migration-file>`: Generate a migration file based on the current database schema.
   - `yarn migrate:run`: Run pending migrations.
