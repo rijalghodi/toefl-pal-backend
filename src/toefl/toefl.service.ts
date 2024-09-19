@@ -42,13 +42,11 @@ export class ToeflService {
     });
   }
 
-  async findOneToefl(
-    toeflId?: string,
-  ): Promise<Omit<Toefl, 'setId'> & { version: ToeflVersion[] }> {
-    const toefl = await this.toeflRepo.findOne({ where: { id: toeflId } });
-    const toeflVersion =
-      await this.toeflVersionService.findAllToeflVersion(toeflId);
-    return { ...toefl, version: toeflVersion };
+  async findOneToefl(toeflId?: string): Promise<Omit<Toefl, 'setId'>> {
+    const toefl = await this.toeflRepo.findOne({
+      where: { id: toeflId },
+    });
+    return { ...toefl };
   }
 
   async createToefl(userId: string, data: CreateToeflDto): Promise<Toefl> {
