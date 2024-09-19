@@ -20,7 +20,7 @@ export class Toefl {
   @PrimaryColumn()
   id: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'varchar', length: 100, default: 'Untitled' })
   name: string;
 
   @Column('text', { nullable: true })
