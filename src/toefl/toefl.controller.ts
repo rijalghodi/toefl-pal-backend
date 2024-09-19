@@ -21,6 +21,7 @@ import { CreateToeflDto } from './dto/create-toefl.dto';
 import { UpdateToeflDto } from './dto/update-toefl.dto';
 import { ToeflService } from './toefl.service';
 import { ToeflVersionService } from './toefl-version.service';
+import { ParseBooleanPipe } from '@/common/pipe/parse-boolean.pipe';
 
 @Controller('toefl')
 export class ToeflController {
@@ -30,7 +31,10 @@ export class ToeflController {
   ) {}
 
   @Get()
-  async findAll(@Query('published') published: boolean, @Req() req: Request) {
+  async findAll(
+    @Query('published', ParseBooleanPipe) published: boolean,
+    @Req() req: Request,
+  ) {
     const user = (req as any).user;
 
     if (!published && !user.roles.includes(Role.SuperAdmin)) {

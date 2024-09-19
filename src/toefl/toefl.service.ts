@@ -24,13 +24,21 @@ export class ToeflService {
 
   async findAllToefl(published?: boolean): Promise<Toefl[]> {
     if (published === undefined || published === null) {
-      return this.toeflRepo.find();
+      return this.toeflRepo.find({
+        where: { deletedAt: IsNull() },
+        order: {
+          updatedAt: 'DESC',
+        },
+      });
     }
 
     return this.toeflRepo.find({
       where: published
-        ? { publishedAt: Not(IsNull()), deletedAt: null }
-        : { publishedAt: null, deletedAt: null },
+        ? { publishedAt: Not(IsNull()), deletedAt: IsNull() }
+        : { publishedAt: IsNull(), deletedAt: IsNull() },
+      order: {
+        updatedAt: 'DESC',
+      },
     });
   }
 
