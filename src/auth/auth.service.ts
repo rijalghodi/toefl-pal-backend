@@ -34,18 +34,18 @@ export class AuthService {
   async generateTokens(user: { id: string; roles: Role[] }) {
     const payload = { sub: user.id, roles: user.roles };
 
-    const access_token = this.jwtService.sign(payload);
+    const accessToken = this.jwtService.sign(payload);
 
-    if (!access_token) {
+    if (!accessToken) {
       throw new BadRequestException('Failed to generate token');
     }
 
-    const exp = new Date(this.jwtService.decode(access_token).exp * 1000);
-    const expired_at = exp.toISOString();
+    const exp = new Date(this.jwtService.decode(accessToken).exp * 1000);
+    const expiredAt = exp.toISOString();
 
     return {
-      access_token,
-      expired_at,
+      accessToken,
+      expiredAt,
     };
   }
 
