@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { FormModule } from '@/form/form.module';
+import { PartModule } from '@/part/part.module';
 
 import { Toefl } from './entity/toefl.entity';
 import { ToeflVersion } from './entity/toefl-version.entity';
@@ -10,7 +11,11 @@ import { ToeflService } from './toefl.service';
 import { ToeflVersionService } from './toefl-version.service';
 
 @Module({
-  imports: [FormModule, TypeOrmModule.forFeature([Toefl, ToeflVersion])],
+  imports: [
+    FormModule,
+    PartModule,
+    TypeOrmModule.forFeature([Toefl, ToeflVersion]),
+  ],
   providers: [ToeflService, ToeflVersionService],
   controllers: [ToeflController],
   exports: [ToeflVersionService],

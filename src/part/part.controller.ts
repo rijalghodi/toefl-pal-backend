@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import { ResponseDto } from '@/common/dto/response.dto';
 
 import { CreatePartDto } from './dto/create-part.dto';
 import { UpdatePartDto } from './dto/update-part.dto';
+import { UpdatePartOrdersDto } from './dto/update-part-orders.dto';
 import { PartService } from './part.service';
 
 @UseInterceptors(
@@ -83,6 +85,16 @@ export class PartController {
   async remove(@Param('partId') id: string) {
     await this.partService.remove(id);
     return new ResponseDto('success', null);
+  }
+
+  @Put(':formId/order')
+  async updatePartOrders(
+    @Param('formId') formId: string,
+    // must attach all ids and order
+    @Body() dto: UpdatePartOrdersDto,
+  ) {
+    const part = await this.partService.updateOrders(formId, dto.orders);
+    return new ResponseDto('success', part);
   }
 
   private extractAudioFiles(files: Express.Multer.File[]) {

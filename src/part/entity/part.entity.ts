@@ -7,6 +7,7 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -15,6 +16,7 @@ import { Question } from '../../question/entity/question.entity';
 import { FileEntity } from '../../storage/entity/file.entity';
 
 @Entity('part')
+@Unique(['form', 'order']) // Composite unique constraint on form_id and order
 export class Part {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -31,7 +33,7 @@ export class Part {
   questions: Question[];
 
   @Column()
-  order: number;
+  order: number; // No need for @Unique here, handled by composite constraint
 
   @Column({ type: 'text', nullable: true })
   name?: string;

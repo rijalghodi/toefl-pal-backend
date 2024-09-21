@@ -16,12 +16,12 @@ import {
 import { ResponseDto } from '@/common/dto/response.dto';
 import { Role } from '@/common/guard/role.enum';
 import { Roles } from '@/common/guard/roles.decorator';
+import { ParseBooleanPipe } from '@/common/pipe/parse-boolean.pipe';
 
 import { CreateToeflDto } from './dto/create-toefl.dto';
 import { UpdateToeflDto } from './dto/update-toefl.dto';
 import { ToeflService } from './toefl.service';
 import { ToeflVersionService } from './toefl-version.service';
-import { ParseBooleanPipe } from '@/common/pipe/parse-boolean.pipe';
 
 @Controller('toefl')
 export class ToeflController {

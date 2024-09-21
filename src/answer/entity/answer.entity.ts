@@ -25,7 +25,10 @@ export class Answer {
   @JoinColumn([{ name: 'attempt_id' }])
   attempt: Attempt;
 
-  @ManyToOne(() => Question, (v) => v.id)
+  @ManyToOne(() => Question, (v) => v.id, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
   @JoinColumn([{ name: 'question_id' }])
   question: Question;
 

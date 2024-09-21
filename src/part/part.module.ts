@@ -13,5 +13,6 @@ import { PartService } from './part.service';
   imports: [TypeOrmModule.forFeature([Part]), FormModule, StorageModule],
   providers: [PartService],
   controllers: [PartController],
+  exports: [PartService],
 })
 export class PartModule {}

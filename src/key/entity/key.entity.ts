@@ -23,7 +23,8 @@ export class Key {
 
   @OneToOne(() => Question, (v) => v.id, {
     nullable: true,
-    onDelete: 'SET NULL',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
   })
   @JoinColumn([{ name: 'question_id' }])
   question?: Question;

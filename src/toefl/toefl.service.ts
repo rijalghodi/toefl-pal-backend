@@ -10,7 +10,6 @@ import { DeepPartial, IsNull, Not, Repository } from 'typeorm';
 import { CreateToeflDto } from './dto/create-toefl.dto';
 import { UpdateToeflDto } from './dto/update-toefl.dto';
 import { Toefl } from './entity/toefl.entity';
-import { ToeflVersion } from './entity/toefl-version.entity';
 import { ToeflVersionService } from './toefl-version.service';
 
 @Injectable()
@@ -53,12 +52,12 @@ export class ToeflService {
     const toeflInp: DeepPartial<Toefl> = { ...data, createdBy: { id: userId } };
     const toefl = await this.toeflRepo.save(this.toeflRepo.create(toeflInp));
     await this.toeflVersionService.createDefaultToeflVersion(toefl);
-    const versions = await this.toeflVersionService.findAllToeflVersion(
-      toefl.id,
-    );
-    if (versions.length <= 1) {
-      await this.toeflVersionService.activateLastToeflVersion(toefl.id);
-    }
+    // const versions = await this.toeflVersionService.findAllToeflVersion(
+    //   toefl.id,
+    // );
+    // if (versions.length <= 1) {
+    await this.toeflVersionService.activateLastToeflVersion(toefl.id);
+    // }
     return toefl;
   }
 

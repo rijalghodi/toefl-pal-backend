@@ -10,6 +10,7 @@ import { DeepPartial, Repository } from 'typeorm';
 
 import { SkillType } from '@/form/enum/skill-type.enum';
 import { FormService } from '@/form/form.service';
+import { PartService } from '@/part/part.service';
 
 import { Toefl } from './entity/toefl.entity';
 import { ToeflVersion } from './entity/toefl-version.entity';
@@ -23,24 +24,54 @@ export class ToeflVersionService {
     @Inject(forwardRef(() => ToeflService))
     private readonly toeflService: ToeflService,
     private readonly formService: FormService,
+    private readonly partService: PartService,
   ) {}
 
   async createDefaultToeflVersion(toefl: Toefl): Promise<ToeflVersion> {
+    /**
+     * In this method, we create three things:
+     * 1. TOEFL sections (listening, reading, grammar), which is forms
+     * 2. TOEFL section part
+     * 3. TOEFL version
+     */
+
+    // --- Create Sections ---
+
     const listeningSection = await this.formService.createForm({
       name: 'Listening Section',
-      duration: 35 * 60,
-      skillType: SkillType.LISTENING,
+      duration: 35,
+      skillType: SkillType.Listening,
     });
+
     const readingSection = await this.formService.createForm({
       name: 'Reading Section',
-      duration: 50 * 60,
-      skillType: SkillType.READING,
+      duration: 50,
+      skillType: SkillType.Reading,
     });
+
     const grammarSection = await this.formService.createForm({
       name: 'Structure & Written Section',
-      duration: 25 * 60,
-      skillType: SkillType.GRAMMAR,
+      duration: 25,
+      skillType: SkillType.Grammar,
     });
+
+    // --- Create section parts ---
+    await this.partService.create(listeningSection.id, {
+      order: 1,
+      name: 'Untitled',
+    });
+
+    await this.partService.create(readingSection.id, {
+      order: 1,
+      name: 'Untitled',
+    });
+
+    await this.partService.create(grammarSection.id, {
+      order: 1,
+      name: 'Untitled',
+    });
+
+    // --- Create TOEFL version ---
 
     const toeflVersionInp: DeepPartial<ToeflVersion> = {
       listeningSection,

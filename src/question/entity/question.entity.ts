@@ -38,7 +38,9 @@ export class Question {
   form: Form;
 
   @ManyToOne(() => Part, (v) => v.questions, {
-    nullable: true,
+    nullable: false,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
   @JoinColumn([{ name: 'part_id' }])
   part?: Part;

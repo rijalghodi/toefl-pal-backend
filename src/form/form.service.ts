@@ -18,7 +18,10 @@ export class FormService {
   ) {}
 
   async findOneForm(formId?: string): Promise<Form> {
-    const form = await this.formRepo.findOne({ where: { id: formId } });
+    const form = await this.formRepo.findOne({
+      where: { id: formId },
+      relations: ['instructionAudio', 'closingAudio'],
+    });
     // const version = await this.findAllFormVersion(formId);
     return form;
   }

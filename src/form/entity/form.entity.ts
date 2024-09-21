@@ -31,7 +31,7 @@ export class Form {
     type: 'enum',
     name: 'skill_type',
     enum: SkillType,
-    default: SkillType.READING,
+    default: SkillType.Reading,
   })
   skillType: SkillType;
 

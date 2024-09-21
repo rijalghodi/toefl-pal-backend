@@ -1,6 +1,6 @@
 // src/enums/status.enum.ts
 export enum SkillType {
-  LISTENING = 'listening',
-  GRAMMAR = 'grammar',
-  READING = 'reading',
+  Listening = 'listening',
+  Grammar = 'grammar',
+  Reading = 'reading',
 }

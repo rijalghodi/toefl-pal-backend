@@ -1,6 +1,8 @@
 import { Storage } from '@google-cloud/storage';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { nanoid } from 'nanoid'; // Import nanoid
+import * as path from 'path'; // Import path to handle file extensions
 import { Repository } from 'typeorm';
 
 import { FileEntity } from './entity/file.entity';
@@ -18,19 +20,38 @@ export class StorageService {
       projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
       credentials: {
         client_email: process.env.GOOGLE_CLOUD_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_CLOUD_PRIVATE_KEY.replace(/\\n/g, '\n'), // Replace escaped \n with actual newlines
+        private_key: process.env.GOOGLE_CLOUD_PRIVATE_KEY.replace(/\\n/g, '\n'),
       },
     });
+  }
+
+  // Generate a unique, interpretable filename
+  private generateUniqueFilename(originalName: string): string {
+    const timestamp = new Date().toISOString().replace(/[:.-]/g, ''); // Generate timestamp
+    const uniqueId = nanoid(5); // Generates a 5-character string
+    const extension = path.extname(originalName); // Extract file extension
+
+    // Truncate original name to 10 characters and sanitize spaces
+    const baseName = path
+      .basename(originalName, extension)
+      .substring(0, 10)
+      .replace(/\s+/g, ''); // Remove spaces instead of replacing them with underscores
+
+    return `${baseName}_${timestamp}_${uniqueId}${extension}`; // Construct unique filename
   }
 
   // Upload file to Google Cloud Storage
   async uploadFile(file: Express.Multer.File): Promise<FileEntity> {
     const bucket = this.storage.bucket(this.bucketName);
 
-    const blob = bucket.file(file.originalname);
+    // Generate the unique, interpretable filename
+    const uniqueFilename = this.generateUniqueFilename(file.originalname);
+
+    const blob = bucket.file(uniqueFilename);
     const blobStream = blob.createWriteStream({
       resumable: false,
     });
+
     const publicUrl = await new Promise<string>((resolve, reject) => {
       blobStream
         .on('finish', () => {
@@ -43,8 +64,9 @@ export class StorageService {
         .end(file.buffer);
     });
 
+    // Save file information in the database
     const fileRecord = this.fileRepo.create({
-      filename: file.fieldname,
+      filename: uniqueFilename,
       originalFilename: file.originalname,
       url: publicUrl,
       mimetype: file.mimetype,
