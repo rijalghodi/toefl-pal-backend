@@ -5,7 +5,8 @@ import { IsNumber, IsOptional } from 'class-validator';
 export class CreatePartDto {
   @Transform(({ value }) => parseInt(value, 10))
   @IsNumber()
-  order: number;
+  @IsOptional()
+  order?: number;
 
   @IsOptional()
   name?: string;

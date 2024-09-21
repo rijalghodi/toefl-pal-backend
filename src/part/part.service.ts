@@ -18,64 +18,76 @@ export class PartService {
     private readonly formService: FormService,
     private readonly storageService: StorageService,
   ) {}
-
   async create(
     formId: string,
-    createPartDto: CreatePartDto,
+    dto: CreatePartDto,
     instructionAudioFile?: Express.Multer.File,
     closingAudioFile?: Express.Multer.File,
   ): Promise<Part> {
+    // Fetch the form to ensure it exists
     const form = await this.formService.findOneForm(formId);
     if (!form) throw new NotFoundException(`Form with id ${formId} not found`);
 
-    // Get the highest order for the given formId
+    // Get the highest current order for the given formId
     const highestOrder = await this.partRepo
       .createQueryBuilder('part')
       .where('part.form_id = :formId', { formId })
       .select('MAX(part.order)', 'maxOrder')
       .getRawOne();
 
-    // Set the new part's order to the next number
+    // Determine the next order value (incremented from the highest current order)
     const nextOrder = (highestOrder?.maxOrder ?? 0) + 1;
 
-    const instructionAudio = await this.uploadAudioFile(instructionAudioFile);
-    const closingAudio = await this.uploadAudioFile(closingAudioFile);
+    // Validate that the new part's order is within the valid range
+    if (dto.order > nextOrder) {
+      throw new Error(`New order must not be greater than ${nextOrder}`);
+    }
+    // If dto.order is less than the next order, proceed with the reordering
+    if (dto.order < nextOrder) {
+      // Step 1: Temporarily set orders >= dto.order to their current value + 1000
+      await this.partRepo
+        .createQueryBuilder()
+        .update(Part)
+        .set({ order: () => `order + 1000` }) // Increment the order by 1000
+        .where('form_id = :formId', { formId })
+        .andWhere('order >= :newOrder', { newOrder: dto.order })
+        .execute();
 
+      // Step 2: Update the parts to reflect the new order
+      await this.partRepo
+        .createQueryBuilder()
+        .update(Part)
+        .set({ order: () => `order - 999` }) // Decrement back to the original range
+        .where('form_id = :formId', { formId })
+        .andWhere('order >= :newOrder', { newOrder: dto.order + 1000 }) // Only update those that were incremented
+        .execute();
+    }
+
+    // Upload instruction and closing audio files if provided
+    const instructionAudio = instructionAudioFile
+      ? await this.uploadAudioFile(instructionAudioFile)
+      : undefined;
+    const closingAudio = closingAudioFile
+      ? await this.uploadAudioFile(closingAudioFile)
+      : undefined;
+
+    // Create the new part with the specified or adjusted order
     const part = this.partRepo.create({
-      ...createPartDto,
+      ...dto,
       instructionAudio,
       closingAudio,
       form: { id: formId },
-      order: nextOrder,
+      order: dto.order || nextOrder, // Use provided order or default to the next available one
     });
+
+    // Save the new part and return it
     return this.partRepo.save(part);
   }
-
-  // async create(
-  //   formId: string,
-  //   createPartDto: CreatePartDto,
-  //   instructionAudioFile?: Express.Multer.File,
-  //   closingAudioFile?: Express.Multer.File,
-  // ): Promise<Part> {
-  //   const form = await this.formService.findOneForm(formId);
-  //   if (!form) throw new NotFoundException(`Form with id ${formId} not found`);
-
-  //   const instructionAudio = await this.uploadAudioFile(instructionAudioFile);
-  //   const closingAudio = await this.uploadAudioFile(closingAudioFile);
-
-  //   const part = this.partRepo.create({
-  //     ...createPartDto,
-  //     instructionAudio,
-  //     closingAudio,
-  //     form,
-  //   });
-  //   return this.partRepo.save(part);
-  // }
 
   async findAll(formId?: string): Promise<Part[]> {
     return this.partRepo.find({
       where: { deletedAt: null, form: { id: formId } },
-      order: { order: 'ASC' }, 
+      order: { order: 'ASC' },
       relations: ['closingAudio', 'instructionAudio'],
     });
   }
@@ -109,11 +121,16 @@ export class PartService {
     return this.partRepo.save(part);
   }
 
+  async remove(id: string): Promise<void> {
+    const part = await this.findOne(id);
+    await this.partRepo.remove(part);
+  }
+
   async updateOrders(
     formId: string,
     orderUpdates: { id: string; order: number }[],
   ): Promise<void> {
-    // -- Fetch the existing parts for the given formId
+    // Fetch the existing parts for the given formId
     const parts = await this.partRepo.find({
       where: { form: { id: formId } },
       order: { order: 'ASC' },
@@ -121,14 +138,14 @@ export class PartService {
 
     const totalParts = parts.length; // Get total number of parts
 
-    // -- Validate the `order` values
+    // Validate the `order` values
     const updatedOrders = orderUpdates.map((update) => update.order);
 
-    // ---- Ensure all order values are unique and within the range [1, totalParts]
+    // Ensure all order values are unique and within the range [1, totalParts]
     const uniqueOrders = new Set(updatedOrders);
     const validOrderRange = [...Array(totalParts).keys()].map((i) => i + 1); // [1, 2, ..., totalParts]
 
-    // ---- Check for missing or duplicate orders
+    // Check for missing or duplicate orders
     if (
       uniqueOrders.size !== totalParts || // Check for duplicate orders
       !validOrderRange.every((num) => uniqueOrders.has(num)) // Check for missing orders
@@ -138,13 +155,21 @@ export class PartService {
       );
     }
 
-    // Step 3: Create the update query
+    // Step 1: Increment all current orders by 1000
+    await this.partRepo
+      .createQueryBuilder()
+      .update(Part)
+      .set({ order: () => `order + 1000` })
+      .where('form_id = :formId', { formId })
+      .execute();
+
+    // Step 2: Create the update query
     const query = this.partRepo.createQueryBuilder();
     const updateCases = orderUpdates
-      .map(({ id, order }) => `WHEN id = '${id}' THEN ${order}`)
+      .map(({ id, order }) => `WHEN id = '${id}' THEN ${order + 1000}`) // Set new order with +1000
       .join(' ');
 
-    // Step 4: Build and execute the SQL query to update the order
+    // Step 3: Build and execute the SQL query to update the order
     await query
       .update(Part)
       .set({
@@ -152,11 +177,6 @@ export class PartService {
       })
       .where('id IN (:...ids)', { ids: orderUpdates.map(({ id }) => id) })
       .execute();
-  }
-
-  async remove(id: string): Promise<void> {
-    const part = await this.findOne(id);
-    await this.partRepo.remove(part);
   }
 
   private async uploadAudioFile(
