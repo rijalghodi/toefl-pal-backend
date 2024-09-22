@@ -82,8 +82,11 @@ export class PartController {
   }
 
   @Delete(':partId')
-  async remove(@Param('partId') id: string) {
-    await this.partService.remove(id);
+  async remove(
+    @Param('formId') formId: string,
+    @Param('partId') partId: string,
+  ) {
+    await this.partService.remove(formId, partId);
     return new ResponseDto('success', null);
   }
 

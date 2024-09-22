@@ -121,9 +121,28 @@ export class PartService {
     return this.partRepo.save(part);
   }
 
-  async remove(id: string): Promise<void> {
-    const part = await this.findOne(id);
+  async remove(formId: string, partId: string): Promise<void> {
+    const part = await this.findOne(partId);
+
     await this.partRepo.remove(part);
+
+    // Step 1: Temporarily set orders >= dto.order to their current value + 1000
+    await this.partRepo
+      .createQueryBuilder()
+      .update(Part)
+      .set({ order: () => `order + 1000` }) // Increment the order by 1000
+      .where('form_id = :formId', { formId })
+      .andWhere('order >= :newOrder', { newOrder: part.order })
+      .execute();
+
+    // Step 2: Update the parts to reflect the new order
+    await this.partRepo
+      .createQueryBuilder()
+      .update(Part)
+      .set({ order: () => `order - 1001` }) // Decrement back to the original range -1
+      .where('form_id = :formId', { formId })
+      .andWhere('order >= :newOrder', { newOrder: part.order + 1000 }) // Only update those that were incremented
+      .execute();
   }
 
   async updateOrders(
