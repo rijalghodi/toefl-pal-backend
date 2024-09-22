@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, IsNull, Repository } from 'typeorm';
 
 import { FileEntity } from '@/storage/entity/file.entity';
 import { StorageService } from '@/storage/storage.service';
@@ -8,6 +8,8 @@ import { StorageService } from '@/storage/storage.service';
 import { CreateReferenceDto } from './dto/create-reference.dto';
 import { UpdateReferenceDto } from './dto/update-reference.dto';
 import { Reference } from './entity/reference.entity';
+import { FilterQueryDto } from '@/common/dto/filter-query.dto';
+import { Pagination } from '@/common/dto/response.dto';
 
 @Injectable()
 export class ReferenceService {
@@ -30,11 +32,31 @@ export class ReferenceService {
     return this.referenceRepo.save(reference);
   }
 
-  async findAll(): Promise<Reference[]> {
-    return this.referenceRepo.find({
+  async findAll(
+    filter: FilterQueryDto,
+  ): Promise<{ data: Reference[]; pagination: Pagination }> {
+    const [data, count] = await this.referenceRepo.findAndCount({
       relations: ['audio'],
-      where: { deletedAt: null },
+      where: filter.search
+        ? [
+            { name: ILike(`%${filter.search}%`), deletedAt: IsNull() },
+            { text: ILike(`%${filter.search}%`), deletedAt: IsNull() },
+          ]
+        : undefined,
+      take: filter.limit,
+      skip: (filter.page - 1) * filter.limit,
+      order: { [filter.order]: filter.sort },
     });
+
+    return {
+      data,
+      pagination: {
+        page: filter.page,
+        pageSize: data.length,
+        totalPage: Math.ceil(count / filter.limit),
+        totalData: count,
+      },
+    };
   }
 
   async findOne(id: string): Promise<Reference> {

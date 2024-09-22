@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
@@ -17,6 +18,7 @@ import { ResponseDto } from '@/common/dto/response.dto';
 import { CreateReferenceDto } from './dto/create-reference.dto';
 import { UpdateReferenceDto } from './dto/update-reference.dto';
 import { ReferenceService } from './reference.service';
+import { FilterQueryDto } from '@/common/dto/filter-query.dto';
 
 @UseInterceptors(
   AnyFilesInterceptor({
@@ -49,9 +51,9 @@ export class ReferenceController {
   }
 
   @Get()
-  async findAll() {
-    const references = await this.referenceService.findAll();
-    return new ResponseDto('success', references);
+  async findAll(@Query() filter: FilterQueryDto) {
+    const references = await this.referenceService.findAll(filter);
+    return new ResponseDto('success', references.data, references.pagination);
   }
 
   @Get(':referenceId')

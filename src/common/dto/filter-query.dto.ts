@@ -24,5 +24,5 @@ export class FilterQueryDto {
 
   @IsOptional()
   @IsString()
-  order?: string = 'created_at';
+  order?: string = 'createdAt';
 }

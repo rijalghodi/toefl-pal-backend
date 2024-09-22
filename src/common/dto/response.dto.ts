@@ -8,8 +8,8 @@ export interface Pagination {
 export class ResponseDto<T> {
   readonly message: string;
   readonly data: T;
-  readonly status?: number;
   readonly pagination?: Pagination;
+  readonly status?: number;
 
   constructor(
     message: string,
