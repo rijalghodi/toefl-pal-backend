@@ -17,6 +17,7 @@ import { ResponseDto } from '@/common/dto/response.dto';
 import { CreateQuestionFullDto } from './dto/create-question-full.dto';
 import { UpdateQuestionFullDto } from './dto/update-question-full.dto';
 import { QuestionService } from './question.service';
+import { CreateQuestionDto } from './dto/create-question.dto';
 
 @UseInterceptors(
   AnyFilesInterceptor({
@@ -31,34 +32,44 @@ import { QuestionService } from './question.service';
     },
   }),
 )
-@Controller('form/:formId/question')
+@Controller()
 export class QuestionController {
   constructor(private readonly questionService: QuestionService) {}
 
-  @Post()
+  @Post('form/:formId/part/:partId/question')
   async create(
     @Param('formId') formId: string,
-    @Body() dto: CreateQuestionFullDto,
+    @Param('partId') partId: string,
+    @Body() dto: CreateQuestionDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     const { audio } = this.extractAudioFiles(files);
-    const result = this.questionService.createQuestionFull(formId, dto, audio);
+    const result = await this.questionService.createQuestionAndDefault(
+      formId,
+      partId,
+      dto,
+      audio,
+    );
+    console.log(result, 'res');
     return new ResponseDto('success', result);
   }
 
-  @Get()
-  async findAll(@Param('formId') formId: string) {
-    const questions = await this.questionService.findAll(formId);
+  @Get('form/:formId/part/:partId/question')
+  async findAllInPart(
+    @Param('formId') formId: string,
+    @Param('partId') partId: string,
+  ) {
+    const questions = await this.questionService.findAllInPart(formId, partId);
     return new ResponseDto('success', questions);
   }
 
-  @Get(':questionId')
+  @Get('question/:questionId')
   async findOne(@Param('questionId') questionId: string) {
     const question = await this.questionService.findOne(questionId);
     return new ResponseDto('success', question);
   }
 
-  @Patch(':questionId')
+  @Patch('question/:questionId')
   async update(
     @Param('questionId') questionId: string,
     @Body() dto: UpdateQuestionFullDto,
@@ -73,7 +84,7 @@ export class QuestionController {
     return new ResponseDto('success', question);
   }
 
-  @Delete(':questionId')
+  @Delete('question/:questionId')
   async remove(@Param('questionId') id: string) {
     await this.questionService.remove(id);
     return new ResponseDto('success', null);

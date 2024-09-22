@@ -20,7 +20,7 @@ export class FilterQueryDto {
 
   @IsOptional()
   @IsIn(['asc', 'desc'])
-  sort?: 'asc' | 'desc' = 'asc';
+  sort?: 'asc' | 'desc' = 'desc';
 
   @IsOptional()
   @IsString()

@@ -2,9 +2,9 @@
 import { IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateKeyDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsUUID()
-  optionId: string;
+  optionId?: string;
 
   @IsOptional()
   explanation?: string;

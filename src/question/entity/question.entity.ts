@@ -8,6 +8,7 @@ import {
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -19,6 +20,7 @@ import { Reference } from '../../reference/entity/reference.entity';
 import { FileEntity } from '../../storage/entity/file.entity';
 
 @Entity('question')
+@Unique(['part', 'order'])
 export class Question {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -18,6 +18,7 @@ import { CreateQuestionDto } from './dto/create-question.dto';
 import { CreateQuestionFullDto } from './dto/create-question-full.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { UpdateQuestionFullDto } from './dto/update-question-full.dto';
+import { PartService } from '@/part/part.service';
 
 @Injectable()
 export class QuestionService {
@@ -25,6 +26,7 @@ export class QuestionService {
     @InjectRepository(Question)
     private readonly questionRepo: Repository<Question>,
     private readonly formService: FormService,
+    private readonly partService: PartService,
     private readonly storageService: StorageService,
     @Inject(forwardRef(() => OptionService))
     private readonly optionService: OptionService,
@@ -34,57 +36,72 @@ export class QuestionService {
 
   async create(
     formId: string,
+    partId: string,
     dto: CreateQuestionDto,
     audioFile?: Express.Multer.File,
   ): Promise<Question> {
     const form = await this.formService.findOneForm(formId);
-    if (!form) throw new NotFoundException(`Form with id ${formId} not found`);
-
+    const part = await this.partService.findOne(partId);
     const audio = await this.uploadAudioFile(audioFile);
+
+    // Order
+    // Get the highest current order for the given formId
+    const highestOrder = await this.questionRepo
+      .createQueryBuilder('question')
+      .where('question.form_id = :formId', { formId })
+      .select('MAX(question.order)', 'maxOrder')
+      .getRawOne();
 
     const question = this.questionRepo.create({
       ...dto,
       audio,
       form,
+      part,
       reference: { id: dto.referenceId },
+      order: (highestOrder?.maxOrder ?? 0) + 1,
     });
 
     return this.questionRepo.save(question);
   }
 
-  async createQuestionFull(
+  async createQuestionAndDefault(
     formId: string,
-    dto: CreateQuestionFullDto,
+    partId: string,
+    dto: CreateQuestionDto,
     audioFile?: Express.Multer.File,
-  ) {
-    const { options, key, explanation, ...questionData } = dto;
-
+  ): Promise<Question> {
     // Create question
-    const question = await this.create(formId, questionData, audioFile);
+    const question = await this.create(formId, partId, dto, audioFile);
 
-    // Create options
-    const createdOptions = await this.optionService.createBulk(
-      question.id,
-      options,
-    );
+    console.log(question);
 
-    // Create answer key
-    const createdKey = await this.keyService.create(question.id, {
-      optionId: createdOptions[key].id,
-      explanation,
+    // Create default option
+    await this.optionService.create(question.id, {
+      order: 1,
+      text: '',
     });
 
-    return {
-      question,
-      options: createdOptions,
-      key: createdKey,
-    };
+    // Create default answer key
+    await this.keyService.create(question.id, {
+      optionId: undefined,
+      explanation: '',
+    });
+
+    return question;
   }
 
-  async findAll(formId?: string): Promise<Question[]> {
+  async findAll(formId: string): Promise<Question[]> {
     return this.questionRepo.find({
-      where: { deletedAt: null, form: { id: formId } },
+      where: { form: { id: formId } },
       relations: ['audio', 'reference', 'options'],
+      order: { order: 'ASC' },
+    });
+  }
+  async findAllInPart(formId: string, partId: string): Promise<Question[]> {
+    return this.questionRepo.find({
+      where: { form: { id: formId }, part: { id: partId } },
+      relations: ['audio', 'reference', 'options'],
+      order: { order: 'ASC' },
     });
   }
 
@@ -101,7 +118,7 @@ export class QuestionService {
   async findOneWithAnswerKey(id: string): Promise<Question> {
     const question = await this.questionRepo.findOne({
       where: { id },
-      relations: ['keys', 'options'],
+      relations: ['key', 'audio', 'options', 'reference'],
     });
     if (!question)
       throw new NotFoundException(`Question with id ${id} not found`);
@@ -140,20 +157,21 @@ export class QuestionService {
       audioFile,
     );
 
-    // Update options
-    const updatedOptions = await this.optionService.updateBulk(options);
+    // // Update options
+    // const updatedOptions = await this.optionService.updateBulk(options);
 
-    // Update answer key
-    const updatedKey = await this.keyService.update(questionId, {
-      optionId: key,
-      explanation,
-    });
+    // // Update answer key
+    // const updatedKey = await this.keyService.update(questionId, {
+    //   optionId: key,
+    //   explanation,
+    // });
 
-    return {
-      question: updatedQuestion,
-      options: updatedOptions,
-      key: updatedKey,
-    };
+    return updatedQuestion;
+    // return {
+    //   question: updatedQuestion,
+    //   options: updatedOptions,
+    //   key: updatedKey,
+    // };
   }
 
   async remove(id: string): Promise<void> {

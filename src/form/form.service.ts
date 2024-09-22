@@ -22,7 +22,7 @@ export class FormService {
       where: { id: formId },
       relations: ['instructionAudio', 'closingAudio'],
     });
-    // const version = await this.findAllFormVersion(formId);
+    if (!form) throw new NotFoundException(`Form with id ${formId} not found`);
     return form;
   }
 

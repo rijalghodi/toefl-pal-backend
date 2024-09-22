@@ -9,12 +9,14 @@ import { Question } from '@/question/entity/question.entity';
 import { QuestionController } from '@/question/question.controller';
 import { QuestionService } from '@/question/question.service';
 import { StorageModule } from '@/storage/storage.module';
+import { PartModule } from '@/part/part.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Question]),
     StorageModule,
     FormModule,
+    PartModule,
     forwardRef(() => OptionModule),
     forwardRef(() => KeyModule),
   ],

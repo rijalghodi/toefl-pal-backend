@@ -34,13 +34,19 @@ export class KeyService {
     if (!question)
       throw new NotFoundException(`Question with id ${questionId} not found`);
 
-    const option = await this.optioanService.findOne(data.optionId);
+    if (data.optionId) {
+      const option = await this.optioanService.findOne(data.optionId);
 
-    if (!option)
-      throw new NotFoundException(`Option with id ${data.optionId} not found`);
+      if (!option)
+        throw new NotFoundException(
+          `Option with id ${data.optionId} not found`,
+        );
 
-    if (!question.options?.some((v: Option) => v.id === data.optionId))
-      throw new BadRequestException(`No option in question match your option`);
+      if (!question.options?.some((v: Option) => v.id === data.optionId))
+        throw new BadRequestException(
+          `No option in question match your option`,
+        );
+    }
 
     const key = this.keyRepo.create({
       ...data,
