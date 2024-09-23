@@ -25,6 +25,12 @@ export class FormController {
     return new ResponseDto('success get one form', form);
   }
 
+  @Get(':formId/full')
+  async findOneFull(@Param('formId') formId: string) {
+    const form = await this.formService.findOneFormFull(formId);
+    return new ResponseDto('success get one form', form);
+  }
+
   @Patch(':formId')
   @UseInterceptors(
     AnyFilesInterceptor({

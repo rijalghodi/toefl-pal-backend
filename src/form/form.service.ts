@@ -26,6 +26,37 @@ export class FormService {
     return form;
   }
 
+  async findOneFormFull(formId?: string): Promise<
+    Omit<Form, 'setId'> & {
+      partLength: number;
+      questionLength: number;
+      questionLengthPerPart: number[];
+    }
+  > {
+    const form = await this.formRepo.findOne({
+      where: { id: formId },
+      relations: [
+        'instructionAudio',
+        'closingAudio',
+        'parts',
+        'parts.questions',
+        'parts.instructionAudio',
+        'parts.closingAudio',
+        'questions',
+        'questions.reference',
+        'questions.part',
+        'questions.options',
+      ],
+    });
+    if (!form) throw new NotFoundException(`Form with id ${formId} not found`);
+    const partLength = form.parts?.length ?? 0;
+    const questionLength = form.questions?.length ?? 0;
+    const questionLengthPerPart = [
+      ...form.parts.map(({ questions }) => questions?.length ?? 0),
+    ];
+    return { ...form, partLength, questionLength, questionLengthPerPart };
+  }
+
   async createForm(data: CreateFormDto): Promise<Form> {
     const form = await this.formRepo.save(this.formRepo.create(data));
     // await this.formVersionRepo.save(this.formVersionRepo.create({ form }));
