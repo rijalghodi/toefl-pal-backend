@@ -6,12 +6,14 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
 import { Question } from '../../question/entity/question.entity';
 
 @Entity('option')
+@Unique(['question', 'order'])
 export class Option {
   @PrimaryGeneratedColumn('uuid')
   id: string;

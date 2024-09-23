@@ -19,9 +19,18 @@ export class OptionService {
   async create(questionId: string, data: CreateOptionDto): Promise<Option> {
     await this.questionService.findOne(questionId);
 
+    // Order
+    // Get the highest current order for the given formId
+    const highestOrder = await this.optionRepo
+      .createQueryBuilder('option')
+      .where('option.question_id = :questionId', { questionId })
+      .select('MAX(option.order)', 'maxOrder')
+      .getRawOne();
+
     const option = this.optionRepo.create({
       ...data,
       question: { id: questionId },
+      order: (highestOrder?.maxOrder ?? 0) + 1,
     });
 
     return this.optionRepo.save(option);
