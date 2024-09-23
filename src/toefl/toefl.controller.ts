@@ -83,7 +83,7 @@ export class ToeflController {
 
   // ---- Publish TOEFL -----
 
-  @Post(':toeflId')
+  @Post(':toeflId/publish')
   @Roles(Role.SuperAdmin)
   async publishToefl(
     @Param('toeflId') toeflId: string,
@@ -93,7 +93,7 @@ export class ToeflController {
     return new ResponseDto('success', toefl);
   }
 
-  @Post(':toeflId')
+  @Post(':toeflId/premium')
   @Roles(Role.SuperAdmin)
   async premiumToefl(
     @Param('toeflId') toeflId: string,
@@ -105,7 +105,7 @@ export class ToeflController {
 
   // ----- TOEFL VERSION ------
 
-  @Post(':toeflId/version')
+  @Post(':toeflId/version')   
   @Roles(Role.SuperAdmin)
   async createVersion(@Param('toeflId') toeflId: string) {
     const toefl = await this.toeflVersionService.createToeflVersion(toeflId);
