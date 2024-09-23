@@ -31,22 +31,15 @@ export class KeyController {
   }
 
   @Get()
-  async findAll(@Param('questionId') questionId: string) {
-    const keys = await this.keyService.findAll(questionId);
+  async findOneByQuestionId(@Param('questionId') questionId: string) {
+    const keys = await this.keyService.findOneByQuestionId(questionId);
     return new ResponseDto('success', keys);
   }
 
-  @Get(':keyId')
-  async findOne(@Param('keyId') keyId: string) {
-    const key = await this.keyService.findOne(keyId);
-    return new ResponseDto('success', key);
-  }
-
-  @Patch(':keyId')
+  @Patch()
   @Roles(Role.SuperAdmin)
   async update(
     @Param('questionId') questionId: string,
-    @Param('keyId') keyId: string,
     @Body() updateKeyDto: UpdateKeyDto,
   ) {
     const key = await this.keyService.update(questionId, updateKeyDto);
