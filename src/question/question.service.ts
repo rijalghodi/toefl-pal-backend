@@ -49,6 +49,7 @@ export class QuestionService {
     const highestOrder = await this.questionRepo
       .createQueryBuilder('question')
       .where('question.form_id = :formId', { formId })
+      .where('question.part_id = :partId', { partId })
       .select('MAX(question.order)', 'maxOrder')
       .getRawOne();
 
@@ -73,11 +74,8 @@ export class QuestionService {
     // Create question
     const question = await this.create(formId, partId, dto, audioFile);
 
-    console.log(question);
-
     // Create default option
     await this.optionService.create(question.id, {
-      order: 1,
       text: '',
     });
 
@@ -111,7 +109,7 @@ export class QuestionService {
       relations: ['audio', 'options', 'reference'],
     });
     if (!question)
-      throw new NotFoundException(`Question with id ${id} not found`);
+      throw new NotFoundException(`Question with id ${id} not found 123`);
     return question;
   }
 
@@ -174,9 +172,35 @@ export class QuestionService {
     // };
   }
 
-  async remove(id: string): Promise<void> {
-    const question = await this.findOne(id);
-    await this.questionRepo.remove(question);
+  async remove(questionId: string): Promise<void> {
+    const question = await this.questionRepo.findOne({
+      where: { id: questionId },
+      relations: ['form', 'part'],
+    });
+    if (!question)
+      throw new NotFoundException(`Question with id ${questionId} not found`);
+
+    console.log('Sampai sini');
+    await this.questionRepo.delete(questionId);
+
+    // Step 1: Temporarily set orders >= dto.order to their current value + 1000
+    await this.questionRepo
+      .createQueryBuilder()
+      .update(Question)
+      .set({ order: () => `order + 1000` }) // Increment the order by 1000
+      .where('form_id = :formId', { formId: question.form.id })
+      .where('part_id = :partId', { partId: question.part.id })
+      .andWhere('order >= :newOrder', { newOrder: question.order })
+      .execute();
+
+    // Step 2: Update the parts to reflect the new order
+    await this.questionRepo
+      .createQueryBuilder()
+      .update(Question)
+      .set({ order: () => `order - 1001` }) // Decrement back to the original range -1
+      .where('form_id = :formId', { formId: question.form.id })
+      .andWhere('order >= :newOrder', { newOrder: question.order + 1000 }) // Only update those that were incremented
+      .execute();
   }
 
   private async uploadAudioFile(

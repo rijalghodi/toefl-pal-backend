@@ -85,8 +85,8 @@ export class QuestionController {
   }
 
   @Delete('question/:questionId')
-  async remove(@Param('questionId') id: string) {
-    await this.questionService.remove(id);
+  async remove(@Param('questionId') questionId: string) {
+    await this.questionService.remove(questionId);
     return new ResponseDto('success', null);
   }
 
