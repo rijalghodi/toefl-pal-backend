@@ -22,6 +22,7 @@ import { CreateToeflDto } from './dto/create-toefl.dto';
 import { UpdateToeflDto } from './dto/update-toefl.dto';
 import { ToeflService } from './toefl.service';
 import { ToeflVersionService } from './toefl-version.service';
+import { FilterQueryDto } from '@/common/dto/filter-query.dto';
 
 @Controller('toefl')
 export class ToeflController {
@@ -33,6 +34,8 @@ export class ToeflController {
   @Get()
   async findAll(
     @Query('published', ParseBooleanPipe) published: boolean,
+    @Query('premium', ParseBooleanPipe) premium: boolean,
+    @Query() filter: FilterQueryDto,
     @Req() req: Request,
   ) {
     const user = (req as any).user;
@@ -42,8 +45,8 @@ export class ToeflController {
         'You do not have permission to access unpublished data.',
       );
     }
-    const data = await this.toeflService.findAllToefl(published);
-    return new ResponseDto('succeess', data);
+    const toefl = await this.toeflService.findAllToefl(filter, published, premium);
+    return new ResponseDto('succeess', toefl.data, toefl.pagination);
   }
 
   @Post()

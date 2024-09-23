@@ -5,12 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, IsNull, Not, Repository } from 'typeorm';
+import { DeepPartial, ILike, IsNull, Not, Repository } from 'typeorm';
 
 import { CreateToeflDto } from './dto/create-toefl.dto';
 import { UpdateToeflDto } from './dto/update-toefl.dto';
 import { Toefl } from './entity/toefl.entity';
 import { ToeflVersionService } from './toefl-version.service';
+import { FilterQueryDto } from '@/common/dto/filter-query.dto';
+import { Pagination } from '@/common/dto/response.dto';
 
 @Injectable()
 export class ToeflService {
@@ -21,24 +23,57 @@ export class ToeflService {
     private readonly toeflVersionService: ToeflVersionService,
   ) {}
 
-  async findAllToefl(published?: boolean): Promise<Toefl[]> {
-    if (published === undefined || published === null) {
-      return this.toeflRepo.find({
-        where: { deletedAt: IsNull() },
-        order: {
-          updatedAt: 'DESC',
-        },
-      });
-    }
+  async findAllToefl(
+    filter?: FilterQueryDto,
+    published?: boolean,
+    premium?: boolean,
+  ): Promise<{ data: Toefl[]; pagination: Pagination }> {
+    const { search, limit, page, order, sort } = filter;
 
-    return this.toeflRepo.find({
-      where: published
-        ? { publishedAt: Not(IsNull()), deletedAt: IsNull() }
-        : { publishedAt: IsNull(), deletedAt: IsNull() },
-      order: {
-        updatedAt: 'DESC',
+    const commonQuery = {
+      take: limit,
+      skip: (page - 1) * limit,
+      order: { [order]: sort },
+    };
+
+    const publishedCondition =
+      published === undefined || published === null
+        ? {}
+        : published
+          ? { publishedAt: Not(IsNull()) }
+          : { publishedAt: IsNull() };
+
+    const premiumCondition =
+      premium === undefined || premium === null ? {} : { premium: premium };
+
+    const whereCondition = [
+      {
+        name: ILike(`%${search}%`),
+        deletedAt: IsNull(),
+        ...publishedCondition,
+        ...premiumCondition,
       },
+      {
+        description: ILike(`%${search}%`),
+        deletedAt: IsNull(),
+        ...publishedCondition,
+        ...premiumCondition,
+      },
+    ];
+
+    const [dataFromDb, countFromDb] = await this.toeflRepo.findAndCount({
+      ...commonQuery,
+      where: whereCondition,
     });
+
+    const pagination = {
+      page,
+      pageSize: dataFromDb.length,
+      totalPage: Math.ceil(countFromDb / limit),
+      totalData: countFromDb,
+    };
+
+    return { data: dataFromDb, pagination };
   }
 
   async findOneToefl(toeflId?: string): Promise<Omit<Toefl, 'setId'>> {
