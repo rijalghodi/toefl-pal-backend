@@ -14,10 +14,9 @@ import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
 import { ResponseDto } from '@/common/dto/response.dto';
 
-import { CreateQuestionFullDto } from './dto/create-question-full.dto';
+import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionFullDto } from './dto/update-question-full.dto';
 import { QuestionService } from './question.service';
-import { CreateQuestionDto } from './dto/create-question.dto';
 
 @UseInterceptors(
   AnyFilesInterceptor({
@@ -50,10 +49,16 @@ export class QuestionController {
       dto,
       audio,
     );
-    console.log(result, 'res');
     return new ResponseDto('success', result);
   }
 
+  @Get('form/:formId/question')
+  async findAll(
+    @Param('formId') formId: string,
+  ) {
+    const questions = await this.questionService.findAll(formId);
+    return new ResponseDto('success', questions);
+  }
   @Get('form/:formId/part/:partId/question')
   async findAllInPart(
     @Param('formId') formId: string,

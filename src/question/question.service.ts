@@ -10,15 +10,14 @@ import { Repository } from 'typeorm';
 import { FormService } from '@/form/form.service';
 import { KeyService } from '@/key/key.service';
 import { OptionService } from '@/option/option.service';
+import { PartService } from '@/part/part.service';
 import { FileEntity } from '@/storage/entity/file.entity';
 import { StorageService } from '@/storage/storage.service';
 
 import { Question } from '../question/entity/question.entity';
 import { CreateQuestionDto } from './dto/create-question.dto';
-import { CreateQuestionFullDto } from './dto/create-question-full.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { UpdateQuestionFullDto } from './dto/update-question-full.dto';
-import { PartService } from '@/part/part.service';
 
 @Injectable()
 export class QuestionService {
@@ -91,8 +90,8 @@ export class QuestionService {
   async findAll(formId: string): Promise<Question[]> {
     return this.questionRepo.find({
       where: { form: { id: formId } },
-      relations: ['audio', 'reference', 'options'],
-      order: { order: 'ASC' },
+      relations: ['audio', 'reference', 'options', 'part'],
+      order: { part: { order: 'ASC' }, order: 'ASC' },
     });
   }
   async findAllInPart(formId: string, partId: string): Promise<Question[]> {
@@ -147,7 +146,7 @@ export class QuestionService {
     dto: UpdateQuestionFullDto,
     audioFile?: Express.Multer.File,
   ) {
-    const { options, key, explanation, ...questionData } = dto;
+    const { ...questionData } = dto;
 
     const updatedQuestion = await this.update(
       questionId,
@@ -180,7 +179,6 @@ export class QuestionService {
     if (!question)
       throw new NotFoundException(`Question with id ${questionId} not found`);
 
-    console.log('Sampai sini');
     await this.questionRepo.delete(questionId);
 
     // Step 1: Temporarily set orders >= dto.order to their current value + 1000

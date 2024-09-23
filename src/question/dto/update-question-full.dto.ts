@@ -48,7 +48,7 @@ export class UpdateQuestionFullDto {
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => OptionDto)
-  options?: OptionDto[];
+  options?: OptionDto[];        
 
   // ---- Answer Key ----
   @IsOptional()

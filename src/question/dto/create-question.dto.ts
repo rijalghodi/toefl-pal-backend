@@ -1,6 +1,5 @@
 // dto/create-part.dto.ts
-import { Transform } from 'class-transformer';
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { IsOptional } from 'class-validator';
 
 export class CreateQuestionDto {
   // ---- Question ----

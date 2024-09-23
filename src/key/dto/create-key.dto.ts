@@ -1,5 +1,5 @@
 // dto/create-part.dto.ts
-import { IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import { IsOptional, IsUUID } from 'class-validator';
 
 export class CreateKeyDto {
   @IsOptional()
