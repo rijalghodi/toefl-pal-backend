@@ -65,6 +65,7 @@ export class ToeflService {
     const [dataFromDb, countFromDb] = await this.toeflRepo.findAndCount({
       ...commonQuery,
       where: whereCondition,
+      order: { premium: 'ASC' },
     });
 
     const pagination = {
