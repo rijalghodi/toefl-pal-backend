@@ -75,6 +75,7 @@ export class OptionService {
   async findAll(questionId?: string): Promise<Option[]> {
     return this.optionRepo.find({
       where: { deletedAt: null, question: { id: questionId } },
+      order: { order: 'ASC' },
     });
   }
 
