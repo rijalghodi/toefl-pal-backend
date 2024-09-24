@@ -69,6 +69,7 @@ export class KeyService {
   async findOne(id: string): Promise<Key> {
     const key = await this.keyRepo.findOne({
       where: { id },
+      relations: ['option', 'question']
     });
     if (!key) throw new NotFoundException(`Key with id ${id} not found`);
     return key;
@@ -76,6 +77,7 @@ export class KeyService {
   async findOneByQuestionId(questionId: string): Promise<Key> {
     const key = await this.keyRepo.findOne({
       where: { question: { id: questionId } },
+      relations: ['option', 'question'] 
     });
     if (!key)
       throw new NotFoundException(
