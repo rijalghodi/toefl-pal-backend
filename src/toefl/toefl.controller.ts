@@ -126,8 +126,8 @@ export class ToeflController {
     return new ResponseDto('succeess', toefl);
   }
 
+  @Public()
   @Get(':toeflId/version/active')
-  @Roles(Role.SuperAdmin)
   async findActiveVersion(@Param('toeflId') toeflId: string) {
     const toefl =
       await this.toeflVersionService.findActiveToeflVersion(toeflId);
