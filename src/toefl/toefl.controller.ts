@@ -15,6 +15,7 @@ import {
 
 import { FilterQueryDto } from '@/common/dto/filter-query.dto';
 import { ResponseDto } from '@/common/dto/response.dto';
+import { Public } from '@/common/guard/public.decorator';
 import { Role } from '@/common/guard/role.enum';
 import { Roles } from '@/common/guard/roles.decorator';
 import { ParseBooleanPipe } from '@/common/pipe/parse-boolean.pipe';
@@ -31,6 +32,7 @@ export class ToeflController {
     private readonly toeflVersionService: ToeflVersionService,
   ) {}
 
+  @Public()
   @Get()
   async findAll(
     @Query('published', ParseBooleanPipe) published: boolean,
@@ -40,12 +42,17 @@ export class ToeflController {
   ) {
     const user = (req as any).user;
 
-    if (!published && !user.roles.includes(Role.SuperAdmin)) {
+    if (!published && !user?.roles?.includes(Role.SuperAdmin)) {
       throw new ForbiddenException(
         'You do not have permission to access unpublished data.',
       );
     }
-    const toefl = await this.toeflService.findAllToefl(filter, published, premium);
+
+    const toefl = await this.toeflService.findAllToefl(
+      filter,
+      published,
+      premium,
+    );
     return new ResponseDto('succeess', toefl.data, toefl.pagination);
   }
 
@@ -105,7 +112,7 @@ export class ToeflController {
 
   // ----- TOEFL VERSION ------
 
-  @Post(':toeflId/version')   
+  @Post(':toeflId/version')
   @Roles(Role.SuperAdmin)
   async createVersion(@Param('toeflId') toeflId: string) {
     const toefl = await this.toeflVersionService.createToeflVersion(toeflId);
