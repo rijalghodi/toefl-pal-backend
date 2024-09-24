@@ -1,6 +1,4 @@
 import {
-  forwardRef,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,19 +7,22 @@ import { DeepPartial, ILike, IsNull, Not, Repository } from 'typeorm';
 
 import { FilterQueryDto } from '@/common/dto/filter-query.dto';
 import { Pagination } from '@/common/dto/response.dto';
+import { Form } from '@/form/entity/form.entity';
+import { SkillType } from '@/form/enum/skill-type.enum';
+import { FormService } from '@/form/form.service';
+import { PartService } from '@/part/part.service';
 
 import { CreateToeflDto } from './dto/create-toefl.dto';
 import { UpdateToeflDto } from './dto/update-toefl.dto';
 import { Toefl } from './entity/toefl.entity';
-import { ToeflVersionService } from './toefl-version.service';
 
 @Injectable()
 export class ToeflService {
   constructor(
     @InjectRepository(Toefl)
     private readonly toeflRepo: Repository<Toefl>,
-    @Inject(forwardRef(() => ToeflVersionService))
-    private readonly toeflVersionService: ToeflVersionService,
+    private readonly formService: FormService,
+    private readonly partService: PartService,
   ) {}
 
   async findAllToefl(
@@ -65,7 +66,7 @@ export class ToeflService {
     const [dataFromDb, countFromDb] = await this.toeflRepo.findAndCount({
       ...commonQuery,
       where: whereCondition,
-      order: { premium: 'ASC' },
+      order: { premium: 'ASC', createdAt: 'DESC' },
     });
 
     const pagination = {
@@ -78,23 +79,96 @@ export class ToeflService {
     return { data: dataFromDb, pagination };
   }
 
-  async findOneToefl(toeflId?: string): Promise<Omit<Toefl, 'setId'>> {
+  async findOneToefl(toeflId?: string): Promise<any> {
     const toefl = await this.toeflRepo.findOne({
       where: { id: toeflId },
+      relations: [
+        'readingSection',
+        'listeningSection',
+        'grammarSection',
+        'readingSection.questions',
+        'listeningSection.questions',
+        'grammarSection.questions',
+      ],
     });
-    return { ...toefl };
+
+    const formatSection = (section?: Form) => ({
+      duration: section?.duration,
+      questionNum: section?.questions?.length ?? 0,
+      name: section?.name,
+      id: section?.id,
+    });
+
+    const {
+      readingSection,
+      listeningSection,
+      grammarSection,
+      ...toeflWithoutSection
+    } = toefl;
+
+    return {
+      ...toeflWithoutSection,
+      readingSection: formatSection(readingSection),
+      listeningSection: formatSection(listeningSection),
+      grammarSection: formatSection(grammarSection),
+    };
   }
 
   async createToefl(userId: string, data: CreateToeflDto): Promise<Toefl> {
-    const toeflInp: DeepPartial<Toefl> = { ...data, createdBy: { id: userId } };
+    /**
+     * In this method, we create three things:
+     * 1. TOEFL sections (listening, reading, grammar), which is forms
+     * 2. TOEFL section part
+     * 3. TOEFL version
+     */
+
+    // --- Create Sections ---
+
+    const listeningSection = await this.formService.createForm({
+      name: 'Listening Section',
+      duration: 35,
+      skillType: SkillType.Listening,
+    });
+
+    const readingSection = await this.formService.createForm({
+      name: 'Reading Section',
+      duration: 50,
+      skillType: SkillType.Reading,
+    });
+
+    const grammarSection = await this.formService.createForm({
+      name: 'Structure & Written Section',
+      duration: 25,
+      skillType: SkillType.Grammar,
+    });
+
+    // --- Create section parts ---
+    await this.partService.create(listeningSection.id, {
+      order: 1,
+      name: 'Untitled',
+    });
+
+    await this.partService.create(readingSection.id, {
+      order: 1,
+      name: 'Untitled',
+    });
+
+    await this.partService.create(grammarSection.id, {
+      order: 1,
+      name: 'Untitled',
+    });
+
+    // --- Create TOEFL  ---
+
+    const toeflInp: DeepPartial<Toefl> = {
+      ...data,
+      listeningSection,
+      readingSection,
+      grammarSection,
+      createdBy: { id: userId },
+    };
     const toefl = await this.toeflRepo.save(this.toeflRepo.create(toeflInp));
-    await this.toeflVersionService.createDefaultToeflVersion(toefl);
-    // const versions = await this.toeflVersionService.findAllToeflVersion(
-    //   toefl.id,
-    // );
-    // if (versions.length <= 1) {
-    await this.toeflVersionService.activateLastToeflVersion(toefl.id);
-    // }
+
     return toefl;
   }
 

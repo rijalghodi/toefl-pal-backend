@@ -5,19 +5,17 @@ import { FormModule } from '@/form/form.module';
 import { PartModule } from '@/part/part.module';
 
 import { Toefl } from './entity/toefl.entity';
-import { ToeflVersion } from './entity/toefl-version.entity';
 import { ToeflController } from './toefl.controller';
 import { ToeflService } from './toefl.service';
-import { ToeflVersionService } from './toefl-version.service';
 
 @Module({
   imports: [
     FormModule,
     PartModule,
-    TypeOrmModule.forFeature([Toefl, ToeflVersion]),
+    TypeOrmModule.forFeature([Toefl]),
   ],
-  providers: [ToeflService, ToeflVersionService],
+  providers: [ToeflService],
   controllers: [ToeflController],
-  exports: [ToeflVersionService],
+  exports: [ToeflService],
 })
 export class ToeflModule {}

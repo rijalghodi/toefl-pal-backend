@@ -7,13 +7,12 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
+import { Form } from '../../form/entity/form.entity';
 import { User } from '../../user/entity/user.entity';
-import { ToeflVersion } from './toefl-version.entity';
 
 @Entity('toefl')
 export class Toefl {
@@ -39,8 +38,31 @@ export class Toefl {
   @Column('text', { nullable: true })
   closing?: string;
 
-  @OneToMany(() => ToeflVersion, (toeflVersion) => toeflVersion.toefl)
-  toeflVersions: ToeflVersion[];
+  // --- Sections ---
+
+  @ManyToOne(() => Form, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn([{ name: 'reading_section_id', referencedColumnName: 'id' }])
+  readingSection?: Form;
+
+  @ManyToOne(() => Form, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn([{ name: 'listening_section_id', referencedColumnName: 'id' }])
+  listeningSection?: Form;
+
+  @ManyToOne(() => Form, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn([{ name: 'grammar_section_id', referencedColumnName: 'id' }])
+  grammarSection?: Form;
+
+  // @OneToMany(() => ToeflVersion, (toeflVersion) => toeflVersion.toefl)
+  // toeflVersions: ToeflVersion[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
