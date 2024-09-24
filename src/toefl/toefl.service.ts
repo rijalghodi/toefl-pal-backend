@@ -29,12 +29,12 @@ export class ToeflService {
     published?: boolean,
     premium?: boolean,
   ): Promise<{ data: Toefl[]; pagination: Pagination }> {
-    const { search, limit, page, order, sort } = filter;
+    const { search = '', limit = 100, page = 1 } = filter;
 
     const commonQuery = {
       take: limit,
       skip: (page - 1) * limit,
-      order: { [order]: sort },
+      // order: { [order]: sort },
     };
 
     const publishedCondition =
