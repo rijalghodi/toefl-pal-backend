@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
 
+import { Form } from '@/form/entity/form.entity';
 import { SkillType } from '@/form/enum/skill-type.enum';
 import { FormService } from '@/form/form.service';
 import { PartService } from '@/part/part.service';
@@ -123,20 +124,53 @@ export class ToeflVersionService {
     return this.toeflVersionRepo.save(this.toeflVersionRepo.create(newVersion));
   }
 
-  async findActiveToeflVersion(toeflId: string): Promise<ToeflVersion> {
-    return this.toeflVersionRepo.findOne({
-      where: { toefl: { id: toeflId }, active: true },
+  async findToeflVersion(toeflId: string, active?: boolean): Promise<any> {
+    const whereCondition =
+      active !== undefined
+        ? { toefl: { id: toeflId }, active }
+        : { toefl: { id: toeflId } };
+
+    const toefl = await this.toeflVersionRepo.findOne({
+      where: whereCondition,
       order: { createdAt: 'DESC' },
-      relations: ['readingSection', 'listeningSection', 'grammarSection'],
+      relations: [
+        'readingSection',
+        'listeningSection',
+        'grammarSection',
+        'readingSection.questions',
+        'listeningSection.questions',
+        'grammarSection.questions',
+      ],
     });
+
+    const formatSection = (section: Form) => ({
+      duration: section.duration,
+      questionNum: section.questions?.length ?? 0,
+      name: section.name,
+      id: section.id,
+    });
+
+    const {
+      readingSection,
+      listeningSection,
+      grammarSection,
+      ...toeflWithoutSection
+    } = toefl;
+
+    return {
+      ...toeflWithoutSection,
+      readingSection: formatSection(readingSection),
+      listeningSection: formatSection(listeningSection),
+      grammarSection: formatSection(grammarSection),
+    };
   }
 
-  async findLatestToeflVersion(toeflId: string): Promise<ToeflVersion> {
-    return this.toeflVersionRepo.findOne({
-      where: { toefl: { id: toeflId } },
-      order: { createdAt: 'DESC' },
-      relations: ['readingSection', 'listeningSection', 'grammarSection'],
-    });
+  async findActiveToeflVersion(toeflId: string): Promise<any> {
+    return this.findToeflVersion(toeflId, true);
+  }
+
+  async findLatestToeflVersion(toeflId: string): Promise<any> {
+    return this.findToeflVersion(toeflId);
   }
 
   async activateLastToeflVersion(toeflId: string): Promise<ToeflVersion> {
