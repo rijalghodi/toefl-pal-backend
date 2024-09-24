@@ -14,6 +14,7 @@ import {
 
 import { FilterQueryDto } from '@/common/dto/filter-query.dto';
 import { ResponseDto } from '@/common/dto/response.dto';
+import { Public } from '@/common/guard/public.decorator';
 import { Role } from '@/common/guard/role.enum';
 import { Roles } from '@/common/guard/roles.decorator';
 import { ParseBooleanPipe } from '@/common/pipe/parse-boolean.pipe';
@@ -30,6 +31,7 @@ export class ToeflController {
     // private readonly toeflVersionService: ToeflVersionService,
   ) {}
 
+  @Public()
   @Get()
   async findAll(
     @Query('published', ParseBooleanPipe) published: boolean,
@@ -61,6 +63,7 @@ export class ToeflController {
     return new ResponseDto('succeess', toefl);
   }
 
+  @Public()
   @Get(':toeflId')
   async findOne(@Param('toeflId') toeflId: string, @Req() req: Request) {
     const user = (req as any).user;
