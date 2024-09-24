@@ -19,8 +19,8 @@ export class UserController {
     return new ResponseDto('list users succeed', data);
   }
 
-  @Get('profile')
-  async profile(@Request() req: any) {
+  @Get('self')
+  async self(@Request() req: any) {
     const profile = await this.userService.findOne({ id: req.user.id });
     return new ResponseDto('get profile succeed', profile);
   }
