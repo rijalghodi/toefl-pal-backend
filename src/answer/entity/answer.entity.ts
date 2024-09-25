@@ -4,7 +4,6 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -21,7 +20,11 @@ export class Answer {
   @Column({ type: 'boolean', nullable: true, default: false })
   marked?: boolean;
 
-  @ManyToOne(() => Attempt, (v) => v.id)
+  @ManyToOne(() => Attempt, (v) => v.answers, {
+    nullable: false,
+    cascade: ['insert', 'update'],
+    eager: true,
+  })
   @JoinColumn([{ name: 'attempt_id' }])
   attempt: Attempt;
 
@@ -32,7 +35,7 @@ export class Answer {
   @JoinColumn([{ name: 'question_id' }])
   question: Question;
 
-  @OneToOne(() => Option, (v) => v.id, {
+  @ManyToOne(() => Option, (v) => v.id, {
     nullable: true,
     onDelete: 'SET NULL',
   })

@@ -110,4 +110,14 @@ export class ToeflController {
     return new ResponseDto('success', toefl);
   }
 
+  @Post(':toeflId/start')
+  @Roles(Role.SuperAdmin)
+  async startToefl(
+    @Param('toeflId') toeflId: string,
+    @Body('premium') premium?: boolean,
+  ) {
+    const toefl = await this.toeflService.premiumToefl(toeflId, premium);
+    return new ResponseDto('success', toefl);
+  }
+
 }

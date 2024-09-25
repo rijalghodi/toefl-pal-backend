@@ -1,19 +1,15 @@
 import {
-  forwardRef,
-  Inject,
+  BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { AttemptService } from '@/attempt/attempt.service';
-import { Option } from '@/option/entity/option.entity';
+import { Attempt } from '@/attempt/entity/attempt.entity';
 import { OptionService } from '@/option/option.service';
 import { QuestionService } from '@/question/question.service';
 
-import { CreateAnswerDto } from './dto/create-answer.dto';
-import { UpdateAnswerDto } from './dto/update-answer.dto';
 import { Answer } from './entity/answer.entity';
 
 @Injectable()
@@ -21,101 +17,109 @@ export class AnswerService {
   constructor(
     @InjectRepository(Answer)
     private readonly answerRepo: Repository<Answer>,
-
-    // @InjectRepository(Question)
-    // private readonly questionRepo: Repository<Question>,
-
-    @Inject(forwardRef(() => AttemptService))
-    private readonly attemptService: AttemptService,
+    @InjectRepository(Attempt)
+    private readonly attemptRepo: Repository<Attempt>,
     private readonly questionService: QuestionService,
     private readonly optionService: OptionService,
   ) {}
 
-  async create(attemptId: string, data: CreateAnswerDto) {
-    const attempt = await this.attemptService.findOne(attemptId);
+  // Update multiple answers in bulk
+  async updateAnswerBulk(
+    attemptId: string,
+    answers: { optionId?: string; questionId: string }[],
+  ) {
+    const updatedAnswers = [];
 
-    if (!attempt) {
-      throw new NotFoundException('Attempt not found');
+    for (const { optionId, questionId } of answers) {
+      const updatedAnswer = await this.updateAnswer(
+        attemptId,
+        optionId,
+        questionId,
+      );
+      updatedAnswers.push(updatedAnswer);
     }
 
-    const answer = this.answerRepo.create({ ...data, attempt: attempt });
-    return this.answerRepo.save(answer);
+    return updatedAnswers;
   }
 
-  async createDefaultAnswersForAttempt(attemptId: string): Promise<Answer[]> {
-    const attempt = await this.attemptService.findOne(attemptId);
+  // Create an answer for a specific question in an attempt
+  async createAnswer(attemptId: string, questionId: string): Promise<Answer> {
+    // Check if an answer already exists for this question and attempt
+    const oldAnswer = await this.answerRepo.findOne({
+      where: { question: { id: questionId }, attempt: { id: attemptId } },
+    });
 
-    if (!attempt) {
-      throw new NotFoundException('Attempt not found');
+    if (oldAnswer) {
+      throw new BadRequestException(
+        `Answer with questionId ${questionId} and attemptId ${attemptId} has already been created`,
+      );
     }
 
-    const questions = await this.questionService.findAll(attempt.form.id);
-
-    if (!questions || questions.length === 0)
-      throw new NotFoundException(`Questions not found`);
-
-    const answers = await this.answerRepo.insert(
-      questions.map((question) => ({
-        attempt,
-        marked: false,
-        question: { id: question.id },
-      })),
-    );
-
-    return answers.raw;
-  }
-
-  async findAll(attemptId: string): Promise<Answer[]> {
-    return this.answerRepo.find({
-      where: { attempt: { id: attemptId } },
-      relations: ['option', 'question'],
+    // Fetch the associated attempt
+    const attempt = await this.attemptRepo.findOne({
+      where: { id: attemptId },
     });
+
+    if (!attempt) throw new NotFoundException(`Attempt ${attemptId} not found`);
+
+    // Fetch the question details
+    const question = await this.questionService.findOneQuestion(questionId);
+
+    // Create a new answer entity
+    const answer = this.answerRepo.create({ attempt, question });
+
+    const saved = await this.answerRepo.save(answer);
+    return saved;
   }
 
-  async findOne(id: string): Promise<Answer> {
-    const answer = await this.answerRepo.findOne({
-      where: { id },
-      relations: ['option', 'question'],
-    });
-    if (!answer) throw new NotFoundException(`Answer with id ${id} not found`);
-    return answer;
-  }
-
-  async update(
-    answerId: string,
-    { optionId, ...data }: UpdateAnswerDto,
+  // Update an existing answer or create it if it doesn't exist
+  async updateAnswer(
+    attemptId: string,
+    optionId: string,
+    questionId: string,
   ): Promise<Answer> {
-    const answer = await this.findOne(answerId);
+    // Fetch the attempt based on ID
+    const attempt = await this.attemptRepo.findOne({
+      where: { id: attemptId },
+    });
 
-    if (!answer)
-      throw new NotFoundException(`Answer with id ${answerId} not found`);
+    if (!attempt) throw new NotFoundException(`Attempt ${attemptId} not found`);
 
-    const possibleOptions = await this.optionService.findAll(
-      answer.question.id,
-    );
+    // Fetch the question based on ID
+    const question = await this.questionService.findOneQuestion(questionId);
+    if (!question)
+      throw new NotFoundException(`Question with id ${questionId} not found`);
 
-    if (optionId) {
-      const option = await this.optionService.findOne(optionId);
+    // Check if the answer already exists
+    let answer: Answer = await this.answerRepo.findOne({
+      where: { question: { id: questionId }, attempt: { id: attemptId } },
+      relations: ['attempt'],
+    });
 
-      if (!option)
-        throw new NotFoundException(`Option with id ${optionId} not found`);
-
-      if (!possibleOptions.some((v: Option) => v.id === option.id))
-        throw new NotFoundException(`No option in question match your option`);
-
-      Object.assign(answer, {
-        option: {
-          id: optionId,
-        },
+    // If no existing answer, create a new one
+    if (!answer) {
+      answer = await this.createAnswer(attemptId, questionId);
+      const newAnswer = await this.answerRepo.findOne({
+        where: { id: answer.id },
+        relations: ['attempt'],
       });
+
+      // Fetch the selected option
+      const option = await this.optionService.findOneOption(optionId);
+
+      // Update the answer with the new option
+      newAnswer.option = option;
+      return await this.answerRepo.save(newAnswer);
     }
 
-    Object.assign(answer, data);
-    return this.answerRepo.save(answer);
-  }
+    // Fetch the selected option
+    const option = await this.optionService.findOneOption(optionId);
 
-  async remove(id: string): Promise<void> {
-    const answer = await this.findOne(id);
-    await this.answerRepo.remove(answer);
+    // Update the answer with the new option
+    answer.option = option;
+
+    // Save the updated answer
+    return await this.answerRepo.save(answer);
+ 
   }
 }

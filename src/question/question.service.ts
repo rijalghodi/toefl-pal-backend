@@ -87,14 +87,24 @@ export class QuestionService {
     return question;
   }
 
-  async findAll(formId: string): Promise<Question[]> {
+  async findAllQuestion(formId: string): Promise<Question[]> {
     return this.questionRepo.find({
       where: { form: { id: formId } },
       relations: ['audio', 'reference', 'options', 'part'],
       order: { part: { order: 'ASC' }, order: 'ASC' },
     });
   }
-  async findAllInPart(formId: string, partId: string): Promise<Question[]> {
+  async findAllQuestionWithAnswerKey(formId: string): Promise<Question[]> {
+    return this.questionRepo.find({
+      where: { form: { id: formId } },
+      relations: ['audio', 'reference', 'options', 'part', 'key', 'key.option'],
+      order: { part: { order: 'ASC' }, order: 'ASC' },
+    });
+  }
+  async findAllQuestionInPart(
+    formId: string,
+    partId: string,
+  ): Promise<Question[]> { 
     return this.questionRepo.find({
       where: { form: { id: formId }, part: { id: partId } },
       relations: ['audio', 'reference', 'options'],
@@ -102,7 +112,7 @@ export class QuestionService {
     });
   }
 
-  async findOne(id: string): Promise<Question> {
+  async findOneQuestion(id: string): Promise<Question> {
     const question = await this.questionRepo.findOne({
       where: { id },
       relations: ['audio', 'options', 'reference'],
@@ -115,7 +125,7 @@ export class QuestionService {
   async findOneWithAnswerKey(id: string): Promise<Question> {
     const question = await this.questionRepo.findOne({
       where: { id },
-      relations: ['key', 'audio', 'options', 'reference'],
+      relations: ['key', 'key.option', 'audio', 'options', 'reference'],
     });
     if (!question)
       throw new NotFoundException(`Question with id ${id} not found`);
@@ -127,7 +137,7 @@ export class QuestionService {
     dto: UpdateQuestionDto,
     audioFile?: Express.Multer.File,
   ): Promise<Question> {
-    const question = await this.findOne(questionId);
+    const question = await this.findOneQuestion(questionId);
 
     if (audioFile) {
       question.audio = await this.uploadAudioFile(audioFile);

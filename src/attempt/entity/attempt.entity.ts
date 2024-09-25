@@ -4,9 +4,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { Answer } from '../../answer/entity/answer.entity';
+import { Eval } from '../../eval/entity/eval.entity';
 import { Form } from '../../form/entity/form.entity';
 import { Question } from '../../question/entity/question.entity';
 import { User } from '../../user/entity/user.entity';
@@ -45,15 +49,27 @@ export class Attempt {
   @JoinColumn([{ name: 'current_question_id' }])
   currentQuestion?: Question;
 
+  @OneToMany(() => Answer, (v) => v.attempt, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  answers?: Answer[];
+
+  @OneToOne(() => Eval, (v) => v.attempt)
+  eval?: Eval;
+
+  @Column({ type: 'timestamp', name: 'end_time', nullable: true })
+  endTime?: Date;
+
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;
 
   @Column({ type: 'timestamp', name: 'started_at', nullable: true })
-  startedAt: Date;
+  startedAt?: Date;
 
   @Column({ type: 'timestamp', name: 'finished_at', nullable: true })
-  finishedAt: Date;
+  finishedAt?: Date;
 
   @Column({ type: 'timestamp', name: 'canceled_at', nullable: true })
-  canceledAt: Date;
+  canceledAt?: Date;
 }

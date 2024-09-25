@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './common/guard/auth.guard';
 import { RoleGuard } from './common/guard/role.guard';
 import datasource from './database/datasource';
+import { EvalModule } from './eval/eval.module';
 import { FormModule } from './form/form.module';
 import { KeyModule } from './key/key.module';
 import { OptionModule } from './option/option.module';
@@ -18,6 +19,7 @@ import { QuestionModule } from './question/question.module';
 import { ReferenceModule } from './reference/reference.module';
 import { StorageModule } from './storage/storage.module';
 import { ToeflModule } from './toefl/toefl.module';
+import { ToeflEvalModule } from './toefl-eval/toefl-eval.module';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -36,6 +38,8 @@ import { UserModule } from './user/user.module';
     KeyModule,
     AnswerModule,
     AttemptModule,
+    EvalModule,
+    ToeflEvalModule
   ],
   providers: [
     AppService,

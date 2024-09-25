@@ -1,56 +1,48 @@
-import {
-  Body,
-  Controller,
-  ForbiddenException,
-  Get,
-  Param,
-  Post,
-  Req,
-  Request,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Request } from '@nestjs/common';
 
+import { UpdateAnswerBulkDto } from '@/answer/dto/update-answer.dto';
 import { ResponseDto } from '@/common/dto/response.dto';
-import { Role } from '@/common/guard/role.enum';
-import { Roles } from '@/common/guard/roles.decorator';
 
 import { AttemptService } from './attempt.service';
-import { CreateAttemptDto } from './dto/create-attempt.dto';
 
-@Controller('form/:formId/attempt')
+@Controller()
 export class AttemptController {
   constructor(private readonly attemptService: AttemptService) {}
 
-  @Post()
-  @Roles(Role.SuperAdmin)
-  async create(
+  @Post('form/:formId/attempt/start')
+  async startAttempt(@Param('formId') formId: string, @Request() req: Request) {
+    const user = (req as any).user;
+    const newAttempt = await this.attemptService.startAttempt(user.id, formId);
+    return new ResponseDto('Success', newAttempt);
+  }
+
+  @Get('form/:formId/attempt')
+  async GetOneAttempt(
     @Param('formId') formId: string,
-    @Body() createAttemptDto: CreateAttemptDto,
-    @Req() req: Request,
+    @Request() req: Request,
   ) {
-    const userId = (req as any).user.id;
-    const attempt = await this.attemptService.create(
-      userId,
+    const user = (req as any).user;
+    const newAttempt = await this.attemptService.findOneAttemptWithServerTime(
+      user.id,
       formId,
-      createAttemptDto,
     );
-    return new ResponseDto('success', attempt);
+    return new ResponseDto('Success', newAttempt);
   }
 
-  @Get()
-  async findAll(@Param('formId') formId: string, @Request() req: Request) {
-    const userId = (req as any).user.id;
-    const attempts = await this.attemptService.findAllRestrict(formId, userId);
-    return new ResponseDto('success', attempts);
-  }
+  @Post('form/:formId/attempt/finish')
+  async finishAttempt(
+    @Param('formId') formId: string,
+    @Body() dto: UpdateAnswerBulkDto,
+    @Request() req: Request,
+  ) {
+    const user = (req as any).user;
 
-  @Get(':attemptId')
-  async findOne(@Param('attemptId') attemptId: string, @Req() req: Request) {
-    const userId = (req as any).user.id;
-    const attempt = await this.attemptService.findOne(attemptId);
+    const attempt = await this.attemptService.finishAttempt(
+      user.id,
+      formId,
+      dto,
+    );
 
-    if (attempt.user.id !== userId) {
-      throw new ForbiddenException();
-    }
     return new ResponseDto('success', attempt);
   }
 }

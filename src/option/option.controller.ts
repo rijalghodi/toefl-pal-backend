@@ -29,13 +29,13 @@ export class OptionController {
 
   @Get('question/:questionId/option')
   async findAll(@Param('questionId') questionId: string) {
-    const options = await this.optionService.findAll(questionId);
+    const options = await this.optionService.findAllOption(questionId);
     return new ResponseDto('success', options);
   }
 
   @Get('option/:optionId')
   async findOne(@Param('optionId') optionId: string) {
-    const option = await this.optionService.findOne(optionId);
+    const option = await this.optionService.findOneOption(optionId);
     return new ResponseDto('success', option);
   }
 
@@ -44,13 +44,16 @@ export class OptionController {
     @Param('optionId') optionId: string,
     @Body() updateOptionDto: UpdateOptionDto,
   ) {
-    const option = await this.optionService.update(optionId, updateOptionDto);
+    const option = await this.optionService.updateOption(
+      optionId,
+      updateOptionDto,
+    );
     return new ResponseDto('success', option);
   }
 
   @Delete('option/:optionId')
   async remove(@Param('optionId') id: string) {
-    await this.optionService.remove(id);
+    await this.optionService.removeOption(id);
     return new ResponseDto('success', null);
   }
 }

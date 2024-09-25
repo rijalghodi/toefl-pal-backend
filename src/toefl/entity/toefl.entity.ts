@@ -25,6 +25,9 @@ export class Toefl {
   @Column('text', { nullable: true })
   description?: string;
 
+  @Column('boolean', { default: false })
+  sample?: boolean;
+
   @Column({ default: false })
   premium: boolean;
 

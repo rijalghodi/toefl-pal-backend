@@ -35,7 +35,7 @@ export class KeyService {
       throw new NotFoundException(`Question with id ${questionId} not found`);
 
     if (data.optionId) {
-      const option = await this.optioanService.findOne(data.optionId);
+      const option = await this.optioanService.findOneOption(data.optionId);
 
       if (!option)
         throw new NotFoundException(
@@ -69,7 +69,7 @@ export class KeyService {
   async findOne(id: string): Promise<Key> {
     const key = await this.keyRepo.findOne({
       where: { id },
-      relations: ['option', 'question']
+      relations: ['option', 'question'],
     });
     if (!key) throw new NotFoundException(`Key with id ${id} not found`);
     return key;
@@ -77,7 +77,7 @@ export class KeyService {
   async findOneByQuestionId(questionId: string): Promise<Key> {
     const key = await this.keyRepo.findOne({
       where: { question: { id: questionId } },
-      relations: ['option', 'question'] 
+      relations: ['option', 'question'],
     });
     if (!key)
       throw new NotFoundException(
@@ -94,13 +94,13 @@ export class KeyService {
     if (!key)
       throw new NotFoundException(`Key with id ${questionId} not found`);
 
-    const question = await this.questionService.findOne(questionId);
+    const question = await this.questionService.findOneQuestion(questionId);
 
     if (!question)
       throw new NotFoundException(`Question with id ${questionId} not found`);
 
     if (data.optionId) {
-      const option = await this.optioanService.findOne(data.optionId);
+      const option = await this.optioanService.findOneOption(data.optionId);
 
       if (!option)
         throw new NotFoundException(

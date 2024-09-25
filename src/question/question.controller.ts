@@ -53,10 +53,8 @@ export class QuestionController {
   }
 
   @Get('form/:formId/question')
-  async findAll(
-    @Param('formId') formId: string,
-  ) {
-    const questions = await this.questionService.findAll(formId);
+  async findAll(@Param('formId') formId: string) {
+    const questions = await this.questionService.findAllQuestion(formId);
     return new ResponseDto('success', questions);
   }
   @Get('form/:formId/part/:partId/question')
@@ -64,13 +62,16 @@ export class QuestionController {
     @Param('formId') formId: string,
     @Param('partId') partId: string,
   ) {
-    const questions = await this.questionService.findAllInPart(formId, partId);
+    const questions = await this.questionService.findAllQuestionInPart(
+      formId,
+      partId,
+    );
     return new ResponseDto('success', questions);
   }
 
   @Get('question/:questionId')
   async findOne(@Param('questionId') questionId: string) {
-    const question = await this.questionService.findOne(questionId);
+    const question = await this.questionService.findOneQuestion(questionId);
     return new ResponseDto('success', question);
   }
 

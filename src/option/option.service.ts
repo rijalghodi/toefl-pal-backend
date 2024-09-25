@@ -17,7 +17,7 @@ export class OptionService {
   ) {}
 
   async create(questionId: string, data: CreateOptionDto): Promise<Option> {
-    await this.questionService.findOne(questionId);
+    await this.questionService.findOneQuestion(questionId);
 
     // Order
     // Get the highest current order for the given formId
@@ -61,7 +61,7 @@ export class OptionService {
     const updatedOptions: Option[] = [];
 
     for (const update of updates) {
-      const updatedOption = await this.update(update.id, {
+      const updatedOption = await this.updateOption(update.id, {
         text: update.text,
         order: update.order,
       });
@@ -72,14 +72,14 @@ export class OptionService {
     return updatedOptions;
   }
 
-  async findAll(questionId?: string): Promise<Option[]> {
+  async findAllOption(questionId?: string): Promise<Option[]> {
     return this.optionRepo.find({
       where: { deletedAt: null, question: { id: questionId } },
       order: { order: 'ASC' },
     });
   }
 
-  async findOne(id: string): Promise<Option> {
+  async findOneOption(id: string): Promise<Option> {
     const option = await this.optionRepo.findOne({
       where: { id },
     });
@@ -91,15 +91,15 @@ export class OptionService {
     return option;
   }
 
-  async update(optionId: string, data: UpdateOptionDto): Promise<Option> {
-    const option = await this.findOne(optionId);
+  async updateOption(optionId: string, data: UpdateOptionDto): Promise<Option> {
+    const option = await this.findOneOption(optionId);
 
     Object.assign(option, data);
     return this.optionRepo.save(option);
   }
 
-  async remove(id: string): Promise<void> {
-    const option = await this.findOne(id);
+  async removeOption(id: string): Promise<void> {
+    const option = await this.findOneOption(id);
     await this.optionRepo.remove(option);
   }
 }

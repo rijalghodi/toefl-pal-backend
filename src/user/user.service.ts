@@ -55,7 +55,7 @@ export class UserService {
   async findOne(options: FindOptionsWhere<User>): Promise<User> {
     const user = await this.userRepo.findOne({
       where: options,
-      select: ['email', 'roles', 'created_at'],
+      select: ['email', 'roles', 'created_at', 'id'],
     });
 
     if (!user) {

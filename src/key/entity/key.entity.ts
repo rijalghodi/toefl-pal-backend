@@ -14,7 +14,7 @@ import { Option } from '../../option/entity/option.entity';
 import { Question } from '../../question/entity/question.entity';
 
 @Entity('key')
-export class Key {
+export class  Key {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
