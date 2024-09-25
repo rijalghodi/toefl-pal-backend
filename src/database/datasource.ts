@@ -18,6 +18,7 @@ export const dataSourceOptions: DataSourceOptions & SeederOptions = {
   seeds: ['src/**/*.seeder.{ts,js}'],
   metadataTableName: 'migration',
   synchronize: process.env.NODE_ENV === 'development' ? true : false,
+  ssl: process.env.NODE_ENV === 'production' ? true : false,
 };
 
 const datasource = new DataSource(dataSourceOptions);

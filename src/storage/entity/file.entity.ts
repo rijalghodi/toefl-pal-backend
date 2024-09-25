@@ -8,13 +8,13 @@ export class FileEntity {
   @Column({ nullable: true })
   filename: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'original_filename' })
   originalFilename: string;
 
   @Column()
   url: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'mime_type' })
   mimetype: string;
 
   @Column({ nullable: true })
