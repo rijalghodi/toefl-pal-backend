@@ -1,32 +1,43 @@
+# Stage 1: Build the application
 FROM node:18-alpine AS build
 
-# Set the working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and yarn.lock to install dependencies
+# Copy the package.json and yarn.lock files first (this allows for better caching of dependencies)
 COPY package*.json ./
-RUN yarn install --frozen-lockfile
 
-# Copy the rest of the application code
+# Install only the necessary dependencies (including NestJS)
+RUN yarn install
+
+# Copy the entire project files
 COPY . .
 
-# Build the app
+# Install NestJS CLI globally to use it for the build
+RUN yarn global add @nestjs/cli
+
+# Build the NestJS application
 RUN yarn build
 
-#------------------------------------------------------------------------------
+# ----------------------------------------------------- #
 
-# Use a separate, smaller image for the final build
+# Stage 2: Create the production image
 FROM node:18-alpine
 
 # Set the working directory
 WORKDIR /app
 
-# Copy only the necessary files for production
+# Copy only package.json and yarn.lock files for production dependencies
 COPY package*.json ./
-RUN yarn install --production --frozen-lockfile
 
-# Copy built assets from the build stage
+# Install only production dependencies
+RUN yarn install --production
+
+# Copy the build files from the build stage
 COPY --from=build /app/dist ./dist
 
-# Define the command to run the app
+# Copy any other necessary files (like static assets or configs if needed)
+# COPY --from=build /app/static ./static
+
+# Set the startup command for the production container
 CMD ["yarn", "start:prod"]
