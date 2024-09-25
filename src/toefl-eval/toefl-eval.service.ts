@@ -65,6 +65,15 @@ export class ToeflEvalService {
     return await this.toeflEvalRepo.save(newToeflEval);
   }
 
+  async findAllMetaOnly(userId: string): Promise<ToeflEval[]> {
+    const toeflEvals = await this.toeflEvalRepo.find({
+      where: { user: { id: userId } },
+      relations: ['readingEval', 'grammarEval', 'listeningEval', 'toefl'],
+    });
+
+    return toeflEvals;
+  }
+  
   async findOne(toeflId: string, userId: string): Promise<ToeflEval> {
     /**
      * This will:

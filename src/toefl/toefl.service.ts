@@ -104,7 +104,7 @@ export class ToeflService {
       listeningSection,
       grammarSection,
       ...toeflWithoutSection
-    } = toefl;
+    } = toefl ?? {};
 
     return {
       ...toeflWithoutSection,

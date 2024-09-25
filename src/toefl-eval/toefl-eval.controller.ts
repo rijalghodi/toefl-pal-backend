@@ -15,7 +15,12 @@ import { ToeflEvalService } from './toefl-eval.service';
 @Controller()
 export class ToeflEvalController {
   constructor(private readonly toeflEvalService: ToeflEvalService) {}
-
+  @Get('toefl-eval')
+  async findAll(@Req() req: Request) {
+    const userId = (req as any).user.id;
+    const toeflEvals = await this.toeflEvalService.findAllMetaOnly(userId);
+    return new ResponseDto('success', toeflEvals);
+  }
   @Get('toefl/:toeflId/eval')
   async findOne(@Param('toeflId') toeflId: string, @Req() req: Request) {
     const userId = (req as any).user.id;

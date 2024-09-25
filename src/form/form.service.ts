@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { Part } from '@/part/entity/part.entity';
 import { StorageService } from '@/storage/storage.service';
 
 import { CreateFormDto } from './dto/create-form.dto';
@@ -14,6 +15,8 @@ export class FormService {
   constructor(
     @InjectRepository(Form)
     private readonly formRepo: Repository<Form>,
+    @InjectRepository(Part)
+    private readonly partRepo: Repository<Part>,
     private readonly storageService: StorageService,
   ) {}
 
@@ -51,9 +54,16 @@ export class FormService {
     if (!form) throw new NotFoundException(`Form with id ${formId} not found`);
     const partLength = form.parts?.length ?? 0;
     const questionLength = form.questions?.length ?? 0;
-    const questionLengthPerPart = [
-      ...form.parts.map(({ questions }) => questions?.length ?? 0),
-    ];
+
+    const parts = await this.partRepo.find({
+      where: { form: {id: formId} },
+      relations: ['questions'],
+      order: { order: 'ASC' },
+    });
+    const questionLengthPerPart = parts.map(
+      ({ questions }) => questions?.length ?? 0,
+    );
+
     return { ...form, partLength, questionLength, questionLengthPerPart };
   }
 

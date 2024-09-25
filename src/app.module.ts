@@ -40,7 +40,7 @@ import { UserModule } from './user/user.module';
     AttemptModule,
     EvalModule,
     ToeflEvalModule
-  ],
+  ], 
   providers: [
     AppService,
     {
