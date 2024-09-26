@@ -39,5 +39,7 @@ COPY --from=build /app/dist ./dist
 # Copy any other necessary files (like static assets or configs if needed)
 # COPY --from=build /app/static ./static
 
+EXPOSE 8000
+
 # Set the startup command for the production container
 CMD ["yarn", "start:prod"]
