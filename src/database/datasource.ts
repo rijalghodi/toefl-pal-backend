@@ -17,7 +17,7 @@ export const dataSourceOptions: DataSourceOptions & SeederOptions = {
   factories: ['src/**/*.factory.{ts,js}'],
   seeds: ['src/**/*.seeder.{ts,js}'],
   metadataTableName: 'migration',
-  synchronize: process.env.NODE_ENV === 'development' ? true : false,
+  synchronize: false,
   ssl:
     process.env.NODE_ENV === 'production'
       ? { rejectUnauthorized: false } // allow self-signed certificates in production
