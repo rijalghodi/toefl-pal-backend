@@ -27,7 +27,6 @@ export class ToeflEvalService {
     const toefl = await this.toeflService.findOneToefl(toeflId);
     const user = await this.userService.findOne({ id: userId });
 
-    // Create attempts for each section
     const readingAttempt = await this.attemptService.createAttempt(
       userId,
       toefl.readingSection.id,
@@ -44,46 +43,33 @@ export class ToeflEvalService {
       {},
     );
 
-    // Create evaluations for each attempt with null values initially
     const readingEval = await this.evalService.createEval(readingAttempt.id);
     const listeningEval = await this.evalService.createEval(
       listeningAttempt.id,
     );
     const grammarEval = await this.evalService.createEval(grammarAttempt.id);
 
-    // Create ToeflEval with created evaluations
     const newToeflEval = this.toeflEvalRepo.create({
       toefl,
       user,
       readingEval,
       listeningEval,
       grammarEval,
-      totalScore: null, // This will be calculated later
-      maxScore: null, // This will be calculated later
+      totalScore: null,
+      maxScore: null,
     });
 
-    return await this.toeflEvalRepo.save(newToeflEval);
+    return this.toeflEvalRepo.save(newToeflEval);
   }
 
   async findAllMetaOnly(userId: string): Promise<ToeflEval[]> {
-    const toeflEvals = await this.toeflEvalRepo.find({
+    return this.toeflEvalRepo.find({
       where: { user: { id: userId } },
       relations: ['readingEval', 'grammarEval', 'listeningEval', 'toefl'],
     });
-
-    return toeflEvals;
   }
-  
-  async findOne(toeflId: string, userId: string): Promise<ToeflEval> {
-    /**
-     * This will:
-     * - Return the ToeflEval if it exists
-     * - Otherwise, create a new ToeflEval with:
-     *   - attempts
-     *   - evaluations
-     *   - If stale, recalculate the score
-     */
 
+  async findOne(toeflId: string, userId: string): Promise<ToeflEval> {
     const toeflEval = await this.toeflEvalRepo.findOne({
       where: { toefl: { id: toeflId }, user: { id: userId } },
       relations: [
@@ -96,20 +82,12 @@ export class ToeflEvalService {
       ],
     });
 
-    if (toeflEval) {
-      // Check if the evaluation is stale
-      if (toeflEval.stale) {
-        return await this.calculateScore(toeflId, userId); // Recalculate score
-      }
-      return toeflEval;
-    }
+    if (!toeflEval) return this.createDefaultToeflEval(toeflId, userId);
 
-    return await this.createDefaultToeflEval(toeflId, userId); // Create new evaluation
+    return toeflEval.stale ? this.calculateScore(toeflId, userId) : toeflEval;
   }
 
-  // Calculate the score
   async calculateScore(toeflId: string, userId: string): Promise<ToeflEval> {
-    // Find the Toefl evaluation
     const toeflEval = await this.toeflEvalRepo.findOne({
       where: { toefl: { id: toeflId }, user: { id: userId } },
       relations: [
@@ -125,10 +103,8 @@ export class ToeflEvalService {
 
     if (!toeflEval) throw new NotFoundException('Toefl Eval not found');
 
-    // Get evaluations from the ToeflEval
     const { readingEval, listeningEval, grammarEval } = toeflEval;
 
-    // Update the evaluations before calculating scores
     const updatedReadingEval = await this.evalService.calculateScore(
       readingEval?.attempt?.id,
     );
@@ -138,27 +114,27 @@ export class ToeflEvalService {
     const updatedListeningEval = await this.evalService.calculateScore(
       listeningEval?.attempt?.id,
     );
-    // Update the ToeflEval with the total score
-    toeflEval.totalScore =
-      updatedReadingEval.correctAnswerNum ||
-      0 + updatedGrammarEval.correctAnswerNum ||
-      0 + updatedListeningEval.correctAnswerNum ||
-      0;
-    toeflEval.maxScore =
-      updatedReadingEval.questionNum ||
-      0 + updatedGrammarEval.questionNum ||
-      0 + updatedListeningEval.questionNum ||
-      0;
-    toeflEval.stale = false; // Reset stale state
 
-    return await this.toeflEvalRepo.save(toeflEval);
+    toeflEval.totalScore =
+      (updatedReadingEval.correctAnswerNum || 0) +
+      (updatedGrammarEval.correctAnswerNum || 0) +
+      (updatedListeningEval.correctAnswerNum || 0);
+
+    toeflEval.maxScore =
+      (updatedReadingEval.questionNum || 0) +
+      (updatedGrammarEval.questionNum || 0) +
+      (updatedListeningEval.questionNum || 0);
+
+    toeflEval.stale = false;
+    await this.toeflEvalRepo.save(toeflEval);
+
+    return this.findOne(toeflId, userId);
   }
 
-  // Update the stale state of the evaluation
   async staleScore(
     toeflId: string,
     userId: string,
-    stale?: boolean,
+    stale = true,
   ): Promise<ToeflEval> {
     const toeflEval = await this.toeflEvalRepo.findOne({
       where: { toefl: { id: toeflId }, user: { id: userId } },
@@ -166,6 +142,6 @@ export class ToeflEvalService {
     });
 
     toeflEval.stale = stale;
-    return await this.toeflEvalRepo.save(toeflEval);
+    return this.toeflEvalRepo.save(toeflEval);
   }
 }
