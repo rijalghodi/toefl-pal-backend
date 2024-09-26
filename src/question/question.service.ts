@@ -94,6 +94,7 @@ export class QuestionService {
       order: { part: { order: 'ASC' }, order: 'ASC' },
     });
   }
+  
   async findAllQuestionWithAnswerKey(formId: string): Promise<Question[]> {
     return this.questionRepo.find({
       where: { form: { id: formId } },
@@ -104,7 +105,7 @@ export class QuestionService {
   async findAllQuestionInPartWithAnswerKey(
     formId: string,
     partId: string,
-  ): Promise<Question[]> { 
+  ): Promise<Question[]> {
     return this.questionRepo.find({
       where: { form: { id: formId }, part: { id: partId } },
       relations: ['audio', 'reference', 'options', 'key', 'key.option'],
@@ -114,7 +115,7 @@ export class QuestionService {
   async findAllQuestionInPart(
     formId: string,
     partId: string,
-  ): Promise<Question[]> { 
+  ): Promise<Question[]> {
     return this.questionRepo.find({
       where: { form: { id: formId }, part: { id: partId } },
       relations: ['audio', 'reference', 'options'],
@@ -122,24 +123,28 @@ export class QuestionService {
     });
   }
 
-  async findOneQuestion(id: string): Promise<Question> {
+  async findOneQuestion(questionId: string): Promise<Question> {
     const question = await this.questionRepo.findOne({
-      where: { id },
-      relations: ['audio', 'options', 'reference'],
+      where: { id: questionId },
+      relations: ['audio', 'reference'],
     });
     if (!question)
-      throw new NotFoundException(`Question with id ${id} not found 123`);
-    return question;
+      throw new NotFoundException(`Question with id ${questionId} not found`);
+
+    const options = await this.optionService.findAllOption(questionId);
+    return { ...question, options };
   }
 
-  async findOneWithAnswerKey(id: string): Promise<Question> {
+  async findOneWithAnswerKey(questionId: string): Promise<Question> {
     const question = await this.questionRepo.findOne({
-      where: { id },
-      relations: ['key', 'key.option', 'audio', 'options', 'reference'],
+      where: { id: questionId },
+      relations: ['key', 'key.option', 'audio', 'reference'],
     });
+    const options = await this.optionService.findAllOption(questionId);
+
     if (!question)
-      throw new NotFoundException(`Question with id ${id} not found`);
-    return question;
+      throw new NotFoundException(`Question with id ${questionId} not found`);
+    return { ...question, options };
   }
 
   async update(
