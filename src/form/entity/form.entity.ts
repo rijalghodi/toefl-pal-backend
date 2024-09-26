@@ -24,8 +24,8 @@ export class Form {
   @Column({ type: 'varchar', length: 100 })
   name: string;
 
-  @Column('int', { default: 25 * 60 })
-  duration: number; // in seconds
+  @Column('int', { default: 50 })
+  duration: number; // in minutes
 
   @Column('boolean', { name: 'allow_review', default: true })
   allowReview?: boolean;
