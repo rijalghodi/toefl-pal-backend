@@ -17,6 +17,8 @@ import { ResponseDto } from '@/common/dto/response.dto';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionFullDto } from './dto/update-question-full.dto';
 import { QuestionService } from './question.service';
+import { Role } from '@/common/guard/role.enum';
+import { Roles } from '@/common/guard/roles.decorator';
 
 @UseInterceptors(
   AnyFilesInterceptor({
@@ -57,6 +59,7 @@ export class QuestionController {
     const questions = await this.questionService.findAllQuestion(formId);
     return new ResponseDto('success', questions);
   }
+
   @Get('form/:formId/part/:partId/question')
   async findAllInPart(
     @Param('formId') formId: string,
@@ -66,6 +69,19 @@ export class QuestionController {
       formId,
       partId,
     );
+    return new ResponseDto('success', questions);
+  }
+
+  @Get('form/:formId/part/:partId/question-and-key')
+  async findAllInPartWithAnswerKey(
+    @Param('formId') formId: string,
+    @Param('partId') partId: string,
+  ) {
+    const questions =
+      await this.questionService.findAllQuestionInPartWithAnswerKey(
+        formId,
+        partId,
+      );
     return new ResponseDto('success', questions);
   }
 
