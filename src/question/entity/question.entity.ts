@@ -55,6 +55,9 @@ export class Question {
   @JoinColumn([{ name: 'refernce_id' }])
   reference?: Reference;
 
+  @Column({ nullable: true, name: 'reading_reference_detail' })
+  readingReferenceDetail?: string;
+
   @ManyToOne(() => FileEntity, (file) => file.id, {
     nullable: true,
     onDelete: 'SET NULL',
@@ -77,4 +80,3 @@ export class Question {
   @DeleteDateColumn({ type: 'timestamp', name: 'deleted_at', nullable: true })
   deletedAt?: Date;
 }
-

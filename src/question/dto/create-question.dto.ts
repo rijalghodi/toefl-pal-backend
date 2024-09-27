@@ -8,4 +8,7 @@ export class CreateQuestionDto {
 
   @IsOptional()
   referenceId?: string;
+
+  @IsOptional()
+  readingReferenceDetail?: string;
 }
