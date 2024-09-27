@@ -39,18 +39,13 @@ export class QuestionService {
     dto: CreateQuestionDto,
     audioFile?: Express.Multer.File,
   ): Promise<Question> {
-    const form = await this.formService.findOneForm(formId);
-    const part = await this.partService.findOne(partId);
-    const audio = await this.uploadAudioFile(audioFile);
+    const [form, part, audio] = await Promise.all([
+      this.formService.findOneForm(formId),
+      this.partService.findOne(partId),
+      this.uploadAudioFile(audioFile),
+    ]);
 
-    // Order
-    // Get the highest current order for the given formId
-    const highestOrder = await this.questionRepo
-      .createQueryBuilder('question')
-      .where('question.form_id = :formId', { formId })
-      .where('question.part_id = :partId', { partId })
-      .select('MAX(question.order)', 'maxOrder')
-      .getRawOne();
+    const highestOrder = await this.getHighestOrder(formId, partId);
 
     const question = this.questionRepo.create({
       ...dto,
@@ -70,81 +65,53 @@ export class QuestionService {
     dto: CreateQuestionDto,
     audioFile?: Express.Multer.File,
   ): Promise<Question> {
-    // Create question
     const question = await this.create(formId, partId, dto, audioFile);
-
-    // Create default option
-    await this.optionService.create(question.id, {
-      text: '',
-    });
-
-    // Create default answer key
-    await this.keyService.create(question.id, {
-      optionId: undefined,
-      explanation: '',
-    });
-
+    await Promise.all([
+      this.optionService.create(question.id, { text: '' }),
+      this.keyService.create(question.id, {
+        optionId: undefined,
+        explanation: '',
+      }),
+    ]);
     return question;
   }
 
   async findAllQuestion(formId: string): Promise<Question[]> {
-    return this.questionRepo.find({
-      where: { form: { id: formId } },
-      relations: ['audio', 'reference', 'options', 'part'],
-      order: { part: { order: 'ASC' }, order: 'ASC' },
-    });
+    return this.findQuestions(formId, false);
   }
 
   async findAllQuestionAndKey(formId: string): Promise<Question[]> {
-    return this.questionRepo.find({
-      where: { form: { id: formId } },
-      relations: ['audio', 'reference', 'options', 'part', 'key', 'key.option'],
-      order: { part: { order: 'ASC' }, order: 'ASC' },
-    });
+    return this.findQuestions(formId, true);
   }
+
   async findAllQuestionAndKeyInPart(
     formId: string,
     partId: string,
   ): Promise<Question[]> {
-    return this.questionRepo.find({
-      where: { form: { id: formId }, part: { id: partId } },
-      relations: ['audio', 'reference', 'options', 'key', 'key.option'],
-      order: { order: 'ASC' },
-    });
+    return this.findQuestionsInPart(formId, partId, true);
   }
+
   async findAllQuestionInPart(
     formId: string,
     partId: string,
   ): Promise<Question[]> {
-    return this.questionRepo.find({
-      where: { form: { id: formId }, part: { id: partId } },
-      relations: ['audio', 'reference', 'options'],
-      order: { order: 'ASC' },
-    });
+    return this.findQuestionsInPart(formId, partId, false);
   }
 
   async findOneQuestion(questionId: string): Promise<Question> {
-    const question = await this.questionRepo.findOne({
-      where: { id: questionId },
-      relations: ['audio', 'reference'],
-    });
-    if (!question)
+    const question = await this.getQuestionWithOptions(questionId);
+    if (!question) {
       throw new NotFoundException(`Question with id ${questionId} not found`);
-
-    const options = await this.optionService.findAllOption(questionId);
-    return { ...question, options };
+    }
+    return question;
   }
 
   async findOneWithAnswerKey(questionId: string): Promise<Question> {
-    const question = await this.questionRepo.findOne({
-      where: { id: questionId },
-      relations: ['key', 'key.option', 'audio', 'reference'],
-    });
-    const options = await this.optionService.findAllOption(questionId);
-
-    if (!question)
+    const question = await this.getQuestionWithOptions(questionId, true);
+    if (!question) {
       throw new NotFoundException(`Question with id ${questionId} not found`);
-    return { ...question, options };
+    }
+    return question;
   }
 
   async update(
@@ -153,16 +120,11 @@ export class QuestionService {
     audioFile?: Express.Multer.File,
   ): Promise<Question> {
     const question = await this.findOneQuestion(questionId);
-
     if (audioFile) {
       question.audio = await this.uploadAudioFile(audioFile);
     }
 
-    Object.assign(question, {
-      ...dto,
-      reference: { id: dto.referenceId },
-    });
-
+    Object.assign(question, { ...dto, reference: { id: dto.referenceId } });
     return this.questionRepo.save(question);
   }
 
@@ -170,30 +132,9 @@ export class QuestionService {
     questionId: string,
     dto: UpdateQuestionFullDto,
     audioFile?: Express.Multer.File,
-  ) {
-    const { ...questionData } = dto;
-
-    const updatedQuestion = await this.update(
-      questionId,
-      questionData,
-      audioFile,
-    );
-
-    // // Update options
-    // const updatedOptions = await this.optionService.updateBulk(options);
-
-    // // Update answer key
-    // const updatedKey = await this.keyService.update(questionId, {
-    //   optionId: key,
-    //   explanation,
-    // });
-
-    return updatedQuestion;
-    // return {
-    //   question: updatedQuestion,
-    //   options: updatedOptions,
-    //   key: updatedKey,
-    // };
+  ): Promise<Question> {
+    const questionData = { ...dto };
+    return this.update(questionId, questionData, audioFile);
   }
 
   async remove(questionId: string): Promise<void> {
@@ -201,18 +142,92 @@ export class QuestionService {
       where: { id: questionId },
       relations: ['form', 'part'],
     });
-    if (!question)
+    if (!question) {
       throw new NotFoundException(`Question with id ${questionId} not found`);
+    }
 
     await this.questionRepo.delete(questionId);
+    await this.updateQuestionOrderAfterRemoval(question);
+  }
 
+  private async uploadAudioFile(
+    file?: Express.Multer.File,
+  ): Promise<FileEntity | undefined> {
+    return file ? this.storageService.uploadFile(file) : undefined;
+  }
+
+  private async getHighestOrder(formId: string, partId: string) {
+    return this.questionRepo
+      .createQueryBuilder('question')
+      .where('question.form_id = :formId', { formId })
+      .andWhere('question.part_id = :partId', { partId })
+      .select('MAX(question.order)', 'maxOrder')
+      .getRawOne();
+  }
+
+  private async findQuestions(
+    formId: string,
+    withKey: boolean,
+  ): Promise<Question[]> {
+    const relations = withKey
+      ? ['audio', 'reference', 'options', 'part', 'key', 'key.option']
+      : ['audio', 'reference', 'options', 'part'];
+    return this.questionRepo.find({
+      where: { form: { id: formId } },
+      relations,
+      order: {
+        part: { order: 'ASC' },
+        order: 'ASC',
+        options: { order: 'ASC' },
+      },
+    });
+  }
+
+  private async findQuestionsInPart(
+    formId: string,
+    partId: string,
+    withKey: boolean,
+  ): Promise<Question[]> {
+    const relations = withKey
+      ? ['audio', 'reference', 'options', 'key', 'key.option']
+      : ['audio', 'reference', 'options'];
+    return this.questionRepo.find({
+      where: { form: { id: formId }, part: { id: partId } },
+      relations,
+      order: {
+        part: { order: 'ASC' },
+        order: 'ASC',
+        options: { order: 'ASC' },
+      },
+    });
+  }
+
+  private async getQuestionWithOptions(
+    questionId: string,
+    withKey: boolean = false,
+  ): Promise<Question> {
+    const relations = withKey
+      ? ['key', 'key.option', 'audio', 'reference']
+      : ['audio', 'reference'];
+    const question = await this.questionRepo.findOne({
+      where: { id: questionId },
+      relations,
+    });
+
+    const options = await this.optionService.findAllOption(questionId);
+    return { ...question, options };
+  }
+
+  private async updateQuestionOrderAfterRemoval(
+    question: Question,
+  ): Promise<void> {
     // Step 1: Temporarily set orders >= dto.order to their current value + 1000
     await this.questionRepo
       .createQueryBuilder()
       .update(Question)
       .set({ order: () => `order + 1000` }) // Increment the order by 1000
       .where('form_id = :formId', { formId: question.form.id })
-      .where('part_id = :partId', { partId: question.part.id })
+      .andWhere('part_id = :partId', { partId: question.part.id })
       .andWhere('order >= :newOrder', { newOrder: question.order })
       .execute();
 
@@ -224,11 +239,5 @@ export class QuestionService {
       .where('form_id = :formId', { formId: question.form.id })
       .andWhere('order >= :newOrder', { newOrder: question.order + 1000 }) // Only update those that were incremented
       .execute();
-  }
-
-  private async uploadAudioFile(
-    file?: Express.Multer.File,
-  ): Promise<FileEntity | undefined> {
-    return file ? this.storageService.uploadFile(file) : undefined;
   }
 }
