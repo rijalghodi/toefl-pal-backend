@@ -94,15 +94,15 @@ export class QuestionService {
       order: { part: { order: 'ASC' }, order: 'ASC' },
     });
   }
-  
-  async findAllQuestionWithAnswerKey(formId: string): Promise<Question[]> {
+
+  async findAllQuestionAndKey(formId: string): Promise<Question[]> {
     return this.questionRepo.find({
       where: { form: { id: formId } },
       relations: ['audio', 'reference', 'options', 'part', 'key', 'key.option'],
       order: { part: { order: 'ASC' }, order: 'ASC' },
     });
   }
-  async findAllQuestionInPartWithAnswerKey(
+  async findAllQuestionAndKeyInPart(
     formId: string,
     partId: string,
   ): Promise<Question[]> {

@@ -17,8 +17,6 @@ import { ResponseDto } from '@/common/dto/response.dto';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionFullDto } from './dto/update-question-full.dto';
 import { QuestionService } from './question.service';
-import { Role } from '@/common/guard/role.enum';
-import { Roles } from '@/common/guard/roles.decorator';
 
 @UseInterceptors(
   AnyFilesInterceptor({
@@ -60,6 +58,12 @@ export class QuestionController {
     return new ResponseDto('success', questions);
   }
 
+  @Get('form/:formId/question-and-key')
+  async findAllQuestionAndKey(@Param('formId') formId: string) {
+    const questions = await this.questionService.findAllQuestionAndKey(formId);
+    return new ResponseDto('success', questions);
+  }
+
   @Get('form/:formId/part/:partId/question')
   async findAllInPart(
     @Param('formId') formId: string,
@@ -73,15 +77,14 @@ export class QuestionController {
   }
 
   @Get('form/:formId/part/:partId/question-and-key')
-  async findAllInPartWithAnswerKey(
+  async findAllQuestionAndKeyInPart(
     @Param('formId') formId: string,
     @Param('partId') partId: string,
   ) {
-    const questions =
-      await this.questionService.findAllQuestionInPartWithAnswerKey(
-        formId,
-        partId,
-      );
+    const questions = await this.questionService.findAllQuestionAndKeyInPart(
+      formId,
+      partId,
+    );
     return new ResponseDto('success', questions);
   }
 

@@ -43,7 +43,7 @@ export class EvalService {
       ],
     });
 
-    const questions = await this.questionService.findAllQuestionWithAnswerKey(
+    const questions = await this.questionService.findAllQuestionAndKey(
       attempt.form.id,
     );
 

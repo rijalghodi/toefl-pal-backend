@@ -99,7 +99,7 @@ export class AttemptService {
   async findOneAttempt(userId: string, formId: string): Promise<Attempt> {
     const attempt = await this.attemptRepo.findOne({
       where: { form: { id: formId }, user: { id: userId } },
-      relations: ['user', 'form', 'answers'],
+      relations: ['user', 'form', 'answers', 'answers.option', 'answers.question'],
     });
 
     if (!attempt) {
