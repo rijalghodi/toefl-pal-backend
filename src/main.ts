@@ -14,6 +14,6 @@ async function bootstrap() {
     methods: process.env.CORS_METHODS || 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: process.env.CORS_CREDENTIALS === 'true',
   });
-  await app.listen(process.env.PORT ?? 8000);
+  await app.listen(process.env.PORT ?? 10000);
 }
 bootstrap();
