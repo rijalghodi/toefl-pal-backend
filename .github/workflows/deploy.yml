@@ -1,38 +1,48 @@
-name: Deploy to IDCloudhost
+name: Deploy to Server
 
 on:
   push:
-    branches: [main] # or your deploy branch
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up SSH key
+      - name: Write .env File
+        run: echo -e "${{ vars.ENV_FILE }}" > .env
+
+      - name: Build Docker Image
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ vars.VPS_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p ${{ vars.VPS_PORT }} ${{ vars.VPS_HOST }} >> ~/.ssh/known_hosts
+          docker build -t ${{ vars.APP_NAME }}:latest .
 
-      - name: Build Docker image
-        run: docker build -t ${{ vars.APP_NAME }} .
+      - name: Save Docker Image
+        run: docker save ${{ vars.APP_NAME }}:latest | gzip > ${{ vars.APP_NAME }}.tar.gz
 
-      - name: Save image to tarball
-        run: docker save ${{ vars.APP_NAME }} > app.tar
+      - name: Transfer Image to Server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ vars.VPS_HOST }}
+          username: ${{ vars.VPS_USER }}
+          key: ${{ vars.VPS_KEY }}
+          source: "${{ vars.APP_NAME }}.tar.gz"
+          target: "~/"
 
-      - name: Copy Docker image to VPS
-        run: |
-          scp -P ${{ vars.VPS_PORT }} app.tar ${{ vars.VPS_USER }}@${{ vars.VPS_HOST }}:/tmp/app.tar
-
-      - name: Load & run container on VPS
-        run: |
-          ssh -p ${{ vars.VPS_PORT }} ${{ vars.VPS_USER }}@${{ vars.VPS_HOST }} << 'EOF'
-            docker load < /tmp/app.tar
-            docker rm -f ${{ vars.APP_NAME }} || true
-            docker run -d --name ${{ vars.APP_NAME }} -p ${{ vars.APP_PORT }}:10000 ${{ vars.APP_NAME }}
-          EOF
+      - name: Deploy on Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.VPS_HOST }}
+          username: ${{ vars.VPS_USER }}
+          key: ${{ vars.VPS_KEY }}
+          script: |
+            docker stop ${{ vars.APP_NAME }}-container || true
+            docker rm ${{ vars.APP_NAME }}-container || true
+            gunzip -f ~/${{ vars.APP_NAME }}.tar.gz
+            docker load < ~/${{ vars.APP_NAME }}.tar
+            docker run -d --name ${{ vars.APP_NAME }}-container -p 80:5000 ${{ vars.APP_NAME }}:latest
+            docker system prune -f
