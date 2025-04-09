@@ -1,0 +1,38 @@
+name: Deploy to IDCloudhost
+
+on:
+  push:
+    branches: [main] # or your deploy branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.APP_NAME }} .
+
+      - name: Save image to tarball
+        run: docker save ${{ secrets.APP_NAME }} > app.tar
+
+      - name: Copy Docker image to VPS
+        run: |
+          scp -P ${{ secrets.VPS_PORT }} app.tar ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/app.tar
+
+      - name: Load & run container on VPS
+        run: |
+          ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            docker load < /tmp/app.tar
+            docker rm -f ${{ secrets.APP_NAME }} || true
+            docker run -d --name ${{ secrets.APP_NAME }} -p ${{ secrets.APP_PORT }}:10000 ${{ secrets.APP_NAME }}
+          EOF
