@@ -15,24 +15,24 @@ jobs:
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ vars.VPS_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p ${{ vars.VPS_PORT }} ${{ vars.VPS_HOST }} >> ~/.ssh/known_hosts
 
       - name: Build Docker image
-        run: docker build -t ${{ secrets.APP_NAME }} .
+        run: docker build -t ${{ vars.APP_NAME }} .
 
       - name: Save image to tarball
-        run: docker save ${{ secrets.APP_NAME }} > app.tar
+        run: docker save ${{ vars.APP_NAME }} > app.tar
 
       - name: Copy Docker image to VPS
         run: |
-          scp -P ${{ secrets.VPS_PORT }} app.tar ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/app.tar
+          scp -P ${{ vars.VPS_PORT }} app.tar ${{ vars.VPS_USER }}@${{ vars.VPS_HOST }}:/tmp/app.tar
 
       - name: Load & run container on VPS
         run: |
-          ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          ssh -p ${{ vars.VPS_PORT }} ${{ vars.VPS_USER }}@${{ vars.VPS_HOST }} << 'EOF'
             docker load < /tmp/app.tar
-            docker rm -f ${{ secrets.APP_NAME }} || true
-            docker run -d --name ${{ secrets.APP_NAME }} -p ${{ secrets.APP_PORT }}:10000 ${{ secrets.APP_NAME }}
+            docker rm -f ${{ vars.APP_NAME }} || true
+            docker run -d --name ${{ vars.APP_NAME }} -p ${{ vars.APP_PORT }}:10000 ${{ vars.APP_NAME }}
           EOF
